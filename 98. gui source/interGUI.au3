@@ -148,14 +148,12 @@ Thanks to "The Man" and nGolf for the help!
 Global $GraphStamp = 0 ; used to make sure we aren't drawing an old request
 ; These are GUI elements - don't touch these.
 Global $GUI, $Graph, $ProfileGUI, $ProfileLabel, $hyperlink, $Dummy
-Global $mode0 = "QuakeLive" ;AccelMode names
-Global $mode1 = "Natural"
-Global $mode2 = "Logarithmic"
+Global $mode0 = "QuakeLive", $mode1 = "Natural", $mode2 = "Logarithmic"	;Mode names
 Global $m_accelmode, $m_sens, $m_accel, $m_senscap, $m_offset, $m_power, $m_prexscale, $m_preyscale, $m_postxscale, $m_postyscale, $m_angle, $m_driverenabled, $m_anglesnap, $m_speedcap
 Global $m_new_accelmode, $m_new_sens, $m_new_accel, $m_new_senscap, $m_new_offset, $m_new_power, $m_new_prexscale, $m_new_preyscale, $m_new_postxscale, $m_new_postyscale, $m_new_angle, $m_new_driverenabled, $m_new_anglesnap, $m_new_speedcap
 Global $m_driverenabled, $autoprofilecheckbox, $openprofilebutton, $manualprofilecheckbox
-Global $senscapscaleitem, $accelscaleitem, $lockpostscaleitem
-Global $senscapscaleitem2, $accelscaleitem2, $lockprescaleitem
+Global $senscapscaleitem, $senscapscaleitem2, $accelscaleitem, $accelscaleitem2
+Global $lockpostscaleitem, $lockprescaleitem, $advancedsettingsitem
 Global $wizardoption, $mousesettings
 Global $hyperlink, $Dummy
 Global $CurrentProfile = ""
@@ -224,6 +222,9 @@ Func _ReadIni() ; Read from settings.ini file
    $graph_scale = IniRead($ini_path,"Graph","Scale","X")
    $frametime_ms = IniRead($ini_path,"Mouse","Frametime_ms","2")
    $mouse_dpi = IniRead($ini_path,"Mouse","DPI","0")
+   if IniRead($ini_path, "General", "AdvancedSettings", "0") = 1 Then
+	   GUICtrlSetState($advancedsettingsitem , $GUI_CHECKED)
+   EndIf
    if IniRead($ini_path,"ProfileSettings","AutoSwitch","0") = 1 Then
 	  GUICtrlSetState($autoprofilecheckbox, $GUI_CHECKED)
 	  GUICtrlSetState($openprofilebutton, $GUI_DISABLE)
@@ -258,6 +259,11 @@ Func _WriteIni() ; Write to settings.ini file
    IniWrite($ini_path,"Graph","Scale",$graph_scale)
    IniWrite($ini_path,"Mouse","Frametime_ms",$frametime_ms)
    IniWrite($ini_path,"Mouse","DPI",$mouse_dpi)
+   If BitAND(GUICtrlRead($advancedsettingsitem), $GUI_CHECKED) = $GUI_CHECKED Then
+	  IniWrite($ini_path,"General","AdvancedSettings",1)
+   Else
+	  IniWrite($ini_path,"General","AdvancedSettings",0)
+   EndIf
    If BitAND(GUICtrlRead($autoprofilecheckbox), $GUI_CHECKED) = $GUI_CHECKED Then
 	  IniWrite($ini_path,"ProfileSettings","AutoSwitch",1)
    Else
@@ -985,12 +991,13 @@ Func _Main() ; Draw and handle the GUI
    ;Settings Menu
    $settingsmenu = GUICtrlCreateMenu("&Settings")
    $graphoptions = GUICtrlCreateMenuItem("Change &Graph settings", $settingsmenu)
+   $advancedsettingsitem = GUICtrlCreateMenuItem("Show Advanced Settings", $settingsmenu)
    $prescaleitem = GUICtrlCreateMenuItem("Choose which (X|Y) to plot for &Pre/Post-Scale", $settingsmenu)
-   GUICtrlCreateMenuItem("", $settingsmenu, 2) ; create a separator line
+   GUICtrlCreateMenuItem("", $settingsmenu, 3) ; create a separator line
    $lockpostscaleitem = GUICtrlCreateMenuItem("Lock Post-Scale Y to Post-Scale X",$settingsmenu)
    $accelscaleitem = GUICtrlCreateMenuItem("Scale Accel with Post-Scale X",$settingsmenu)
    $senscapscaleitem = GUICtrlCreateMenuItem("Scale SensCap with Post-Scale X",$settingsmenu)
-   GUICtrlCreateMenuItem("", $settingsmenu, 6) ; create a separator line
+   GUICtrlCreateMenuItem("", $settingsmenu, 7) ; create a separator line
    $lockprescaleitem = GUICtrlCreateMenuItem("Lock Pre-Scale Y to Pre-Scale X",$settingsmenu)
    $accelscaleitem2 = GUICtrlCreateMenuItem("Scale Accel with Pre-Scale X",$settingsmenu)
    $senscapscaleitem2 = GUICtrlCreateMenuItem("Scale SensCap with Pre-Scale X",$settingsmenu)
@@ -1093,17 +1100,13 @@ Func _Main() ; Draw and handle the GUI
 
    $iOldOpt = Opt("GUICoordMode", $iOldOpt)
 
-   ; Local $tempPos = ControlGetPos("", "", $m_angle)
    $checkx = 8
-   ; $checky = $tempPos[1] + 23
    $checky = 458
 
    Local $savebutton, $drawbutton, $msg
-   ; Draw the checkbox and buttons
+   ;Draw the checkbox and buttons
    $m_new_driverenabled = GUICtrlCreateCheckbox("Driver Enabled", $checkx, $checky, 106, 20, $BS_RIGHTBUTTON)
    $m_driverenabled = GUICtrlCreateCheckbox("", $checkx+172, $checky, 20, 20, $BS_RIGHTBUTTON)
-   ;$style = _WinAPI_GetWindowLong(GUICtrlGetHandle($m_new_driverenabled), $GWL_STYLE)
-   ;_WinAPI_SetWindowLong(GUICtrlGetHandle($m_new_driverenabled), $GWL_STYLE, $style+4) ; make this checkbox read-only
    GUICTRLSetState($m_driverenabled, $GUI_DISABLE)
    $drawbutton = GUICtrlCreateButton("Preview Changes", 20, $checky+25)
    $savebutton = GUICtrlCreateButton("Save Changes", 130, $checky+25)
@@ -1111,7 +1114,6 @@ Func _Main() ; Draw and handle the GUI
    ;Profile Text
    GUISetFont (9, 800)
    $ProfileLabel = GUICtrlCreateLabel("Current Profile: ", 10, 7, 200, 16)
-;   GUICtrlCreateLabel("Profiles", 30, 7)
    GUISetFont (9, 400)
    $openprofilebutton = GUICtrlCreateButton("Open", 10, 25)
    $saveprofilebutton = GUICtrlCreateButton("Save", 47, 25)
@@ -1122,17 +1124,17 @@ Func _Main() ; Draw and handle the GUI
    $manualprofilecheckbox = GUICtrlCreateCheckbox("Global Hotkey Switching", 135, 40, 150, 12)
    GUISetFont (9, 400)
 
-   _ReadValsFromConfig() ; Get driver values from Config
+   _ReadValsFromConfig() ;Get driver values from Config
 
    Local $firstTimeRunningGUI = 1
-   if FileExists($ini_path) then $firstTimeRunningGUI = 0
+   if FileExists($ini_path) Then $firstTimeRunningGUI = 0
 
-   _ReadIni() ; Get program settings from settings.ini (or go by defaults if it isn't there)
+   _ReadIni() ;Get program settings from settings.ini (or go by defaults if it isn't there)
 
    Local $graphxpos = 330, $graphypos = 65 ; variables to keep the scale buttons and labels in the right places
    Local $graphwidth = 370, $graphheight = 370
 
-   ; Zoom buttons for graph
+   ;Zoom buttons for graph
    $buttonYscaleup = GUICtrlCreateButton("+", $graphxpos-50, $graphypos+15, 15, 15)
    $buttonYscaleset = GUICtrlCreateButton("...", $graphxpos-50, $graphypos+30, 15, 15)
    $buttonYscaledown = GUICtrlCreateButton("-", $graphxpos-50, $graphypos+45, 15, 15)
@@ -1141,13 +1143,13 @@ Func _Main() ; Draw and handle the GUI
    $buttonXscaleset = GUICtrlCreateButton("...", $graphxpos+$graphwidth-40, $graphypos+$graphheight+30, 15, 15)
    $buttonXscaledown = GUICtrlCreateButton("-", $graphxpos+$graphwidth-25, $graphypos+$graphheight+30, 15, 15)
 
-   ; Graph Axes
+   ;Graph Axes
    GUISetFont (7, 400)
    GUICtrlCreateLabel("Effective mouse sensitivity", $graphxpos-80, $graphypos+$graphheight/2-20, 50, 50)
    GUICtrlCreateLabel("Mouse movement in a single update", $graphxpos+$graphwidth/2-65, $graphypos+$graphheight+25)
    GUISetFont (9, 400)
 
-   ; USB polling rate and DPI text
+   ;USB polling rate and DPI text
    $mousesettings = GUICtrlCreateLabel("500Hz", $graphxpos+130, $graphypos-17, 100, 16)
    If $mouse_dpi > 0 Then
 	  GUICtrlSetData($mousesettings, 1000 / $frametime_ms & "Hz, " & $mouse_dpi & " DPI")
@@ -1196,7 +1198,7 @@ Func _Main() ; Draw and handle the GUI
 	  TraySetToolTip ("Intercept Mouse Accel Filter Config")
    EndIf
 
-   ; Main GUI Loop
+   ;Main GUI Loop
    While 1
 	  If BitAND(GUICtrlRead($autoprofilecheckbox), $GUI_CHECKED) = $GUI_CHECKED Then
 		 ; Check if we need to switch profiles automatically
@@ -1226,7 +1228,7 @@ Func _Main() ; Draw and handle the GUI
 		 EndIf
 	  EndIf
 	  $msg = GUIGetMsg()
-	  Select
+	  Select	;Could I do this as a Switch GUIGetMsg()?
 		 Case $msg = $GUI_EVENT_CLOSE OR $msg = $exititem
 		 _Exit()
          Case $msg = $GUI_EVENT_MINIMIZE
@@ -1239,7 +1241,6 @@ Func _Main() ; Draw and handle the GUI
 		 Case $msg = $drawbutton
 			_Draw_Graph()
 		 Case $msg = $buttonYscaleup
-			$graph_y /= 1.25
 			$graph_y /= 1.25	;This value should be a variable
 			_Draw_Graph()
 		 Case $msg = $buttonYscaledown
@@ -1300,6 +1301,12 @@ Func _Main() ; Draw and handle the GUI
 			Else
 			   GUICtrlSetData($mousesettings, 1000 / $frametime_ms & "Hz")
 			EndIf
+		  Case $msg = $advancedsettingsitem
+			  If BitAND(GUICtrlRead($advancedsettingsitem), $GUI_CHECKED) = $GUI_CHECKED Then
+				  GUICtrlSetState($advancedsettingsitem, $GUI_UNCHECKED)
+			  Else
+				  GUICtrlSetState($advancedsettingsitem, $GUI_CHECKED)
+			  EndIf
 		 Case $msg = $senscapscaleitem
 			If BitAND(GUICtrlRead($senscapscaleitem), $GUI_CHECKED) = $GUI_CHECKED Then
 			  GUICtrlSetState($senscapscaleitem, $GUI_UNCHECKED)

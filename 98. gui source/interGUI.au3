@@ -988,6 +988,7 @@ Func _Main() ; Draw and handle the GUI
    GUICtrlCreateMenuItem("", $filemenu, 3) ; create a separator line
    $exititem = GUICtrlCreateMenuItem("E&xit", $filemenu)
 
+
    ;Settings Menu
    $settingsmenu = GUICtrlCreateMenu("&Settings")
    $graphoptions = GUICtrlCreateMenuItem("Change &Graph settings", $settingsmenu)
@@ -1002,17 +1003,20 @@ Func _Main() ; Draw and handle the GUI
    $accelscaleitem2 = GUICtrlCreateMenuItem("Scale Accel with Pre-Scale X",$settingsmenu)
    $senscapscaleitem2 = GUICtrlCreateMenuItem("Scale SensCap with Pre-Scale X",$settingsmenu)
 
+   ;Profiles Menu
    $profilesmenu = GUICtrlCreateMenu("&Profiles")
    $autoprofileoptionsitem = GUICtrlCreateMenuItem("Manage &Automatic Profiles", $profilesmenu)
    $manualprofileoptionsitem = GUICtrlCreateMenuItem("Manage &Global Hotkeys", $profilesmenu)
-
-
 
    ;Help Menu
    $helpmenu = GUICtrlCreateMenu("&Help")
    $blogoption = GUICtrlCreateMenuItem("Mouse Accel &Blog (for this driver/program)", $helpmenu)
    $mousesensweboption = GUICtrlCreateMenuItem("Mouse-&Sensitivity.com (same sens, different game)", $helpmenu)
 
+
+   ; Draw the settings labels/inputs
+   Local $widthCell, $iOldOpt
+   $iOldOpt = Opt("GUICoordMode", 2)
 
    $widthCell = 90
    $heightCell = 5
@@ -1063,7 +1067,7 @@ Func _Main() ; Draw and handle the GUI
    $m_new_angle = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
    $m_angle = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
 
-;   Local $hToolTip = _GUIToolTip_Create(0, BitOR($_TT_ghTTDefaultStyle, $TTS_BALLOON)); balloon style tooltip
+
    ;Tooltips
    Local $hToolTip = _GUIToolTip_Create(0); default tooltip
    ;Set the tooltip to last 30 seconds.

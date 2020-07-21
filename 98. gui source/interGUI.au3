@@ -452,50 +452,51 @@ Func _ReadValsFromConfig() ; Get existing values from the Config
         Return False
     EndIf
 
-   While 1	;I should re-write this using a switch, it'd look cleaner
+   While 1
 	  $line = FileReadLine($hFileOpen)
 	  If @error = -1 Then ExitLoop
 	  $aVariable = StringSplit($line," = ",1)
-	  If $aVariable[1] == "AccelMode" Then
-		 GUICtrlSetData($m_accelmode, _ConvertAccelMode($aVariable[2]))
-		 GUICtrlSetData($m_new_accelmode, _ConvertAccelMode($aVariable[2]))
-	  ElseIf $aVariable[1] == "Sensitivity" Then
-		 GUICtrlSetData($m_sens, $aVariable[2])
-		 GUICtrlSetData($m_new_sens, $aVariable[2])
-	  ElseIf $aVariable[1] == "Acceleration" Then
-		 GUICtrlSetData($m_accel, $aVariable[2])
-		 GUICtrlSetData($m_new_accel, $aVariable[2])
-	  ElseIf $aVariable[1] == "SensitivityCap" Then
-		 GUICtrlSetData($m_senscap, $aVariable[2])
-		 GUICtrlSetData($m_new_senscap, $aVariable[2])
-	  ElseIf $aVariable[1] == "Offset" Then
-		 GUICtrlSetData($m_offset, $aVariable[2])
-		 GUICtrlSetData($m_new_offset, $aVariable[2])
-	  ElseIf $aVariable[1] == "Power" Then
-		 GUICtrlSetData($m_power, $aVariable[2])
-		 GUICtrlSetData($m_new_power, $aVariable[2])
-	  ElseIf $aVariable[1] == "Pre-ScaleX" Then
-		 GUICtrlSetData($m_prexscale, $aVariable[2])
-		 GUICtrlSetData($m_new_prexscale, $aVariable[2])
-	  ElseIf $aVariable[1] == "Pre-ScaleY" Then
-		 GUICtrlSetData($m_preyscale, $aVariable[2])
-		 GUICtrlSetData($m_new_preyscale, $aVariable[2])
-	  ElseIf $aVariable[1] == "Post-ScaleX" Then
-		 GUICtrlSetData($m_postxscale, $aVariable[2])
-		 GUICtrlSetData($m_new_postxscale, $aVariable[2])
-	  ElseIf $aVariable[1] == "Post-ScaleY" Then
-		 GUICtrlSetData($m_postyscale, $aVariable[2])
-		 GUICtrlSetData($m_new_postyscale, $aVariable[2])
-	  ElseIf $aVariable[1] == "AngleAdjustment" Then
-		 GUICtrlSetData($m_angle, $aVariable[2])
-		 GUICtrlSetData($m_new_angle, $aVariable[2])
-	  ElseIf $aVariable[1] == "AngleSnapping" Then
-		 GUICtrlSetData($m_anglesnap, $aVariable[2])
-		 GUICtrlSetData($m_new_anglesnap, $aVariable[2])
-	  ElseIf $aVariable[1] == "SpeedCap" Then
-		 GUICtrlSetData($m_speedcap, $aVariable[2])
-		 GUICtrlSetData($m_new_speedcap, $aVariable[2])
-	  EndIf
+	  Switch $aVariable[1]
+		  Case "AccelMode"
+			  GUICtrlSetData($m_accelmode, _ConvertAccelMode($aVariable[2]))
+			  GUICtrlSetData($m_new_accelmode, _ConvertAccelMode($aVariable[2]))
+		  Case "Sensitivity"
+			  GUICtrlSetData($m_sens, $aVariable[2])
+			  GUICtrlSetData($m_new_sens, $aVariable[2])
+		  Case "Acceleration"
+			  GUICtrlSetData($m_accel, $aVariable[2])
+			  GUICtrlSetData($m_new_accel, $aVariable[2])
+		  Case "SensitivityCap"
+			  GUICtrlSetData($m_senscap, $aVariable[2])
+			  GUICtrlSetData($m_new_senscap, $aVariable[2])
+		  Case "Offset"
+			  GUICtrlSetData($m_offset, $aVariable[2])
+			  GUICtrlSetData($m_new_offset, $aVariable[2])
+		  Case "Power"
+			  GUICtrlSetData($m_power, $aVariable[2])
+			  GUICtrlSetData($m_new_power, $aVariable[2])
+		  Case "Pre-ScaleX"
+			  GUICtrlSetData($m_prexscale, $aVariable[2])
+			  GUICtrlSetData($m_new_prexscale, $aVariable[2])
+		  Case "Pre-ScaleY"
+			  GUICtrlSetData($m_preyscale, $aVariable[2])
+			  GUICtrlSetData($m_new_preyscale, $aVariable[2])
+		  Case "Post-ScaleX"
+			  GUICtrlSetData($m_postxscale, $aVariable[2])
+			  GUICtrlSetData($m_new_postxscale, $aVariable[2])
+		  Case "Post-ScaleY"
+			  GUICtrlSetData($m_postyscale, $aVariable[2])
+			  GUICtrlSetData($m_new_postyscale, $aVariable[2])
+		  Case "AngleAdjustment"
+			  GUICtrlSetData($m_angle, $aVariable[2])
+			  GUICtrlSetData($m_new_angle, $aVariable[2])
+		  Case "AngleSnapping"
+			  GUICtrlSetData($m_anglesnap, $aVariable[2])
+			  GUICtrlSetData($m_new_anglesnap, $aVariable[2])
+		  Case "SpeedCap"
+			  GUICtrlSetData($m_speedcap, $aVariable[2])
+			  GUICtrlSetData($m_new_speedcap, $aVariable[2])
+	  EndSwitch
    WEnd
 
    FileClose($hFileOpen)

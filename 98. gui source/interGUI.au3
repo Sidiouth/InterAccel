@@ -163,7 +163,6 @@ Global $CurrentProfile = ""
 Global $ini_path = $file_path & "settings.ini"
 Global $graphdensity, $graph_x, $graph_y, $frametime_ms, $mouse_dpi, $graph_scale
 
-;Global $accelExeName = "calc.exe"
 Global $accelExeName = "interaccel.exe"
 
 If _Singleton("Intercept Mouse Accel Filter Config", 1) = 0 Then
@@ -191,7 +190,7 @@ Func _StringIsNumber($input) ; Checks if an input string is a number.
    Return False
 EndFunc
 
-Func _GetNumberFromString($input) ; uses the above regular expression to pull a proper number
+Func _GetNumberFromString($input) ; Uses the above regular expression to pull a proper number
 ;   $array = StringRegExp($input, '^[-+]?([0-9]*\.[0-9]+|[0-9]+)$', 3) ; this didn't return negatives
    $array = StringRegExp($input, '^([-+])?(\d*\.\d+|\d+)$', 3)
    if UBound($array) > 1 Then
@@ -200,7 +199,7 @@ Func _GetNumberFromString($input) ; uses the above regular expression to pull a 
    Return "error"
 EndFunc
 
-Func _ConvertAccelMode($input)	;return accelmode as a number for settings.txt
+Func _ConvertAccelMode($input)	;Return accelmode as a number for settings.txt
 	Switch $input
 		Case $mode0
 			Return 0
@@ -230,16 +229,16 @@ Func _ReadIni() ; Read from settings.ini file
 	  GUICtrlSetState($openprofilebutton, $GUI_DISABLE)
 	  GUICtrlSetState($manualprofilecheckbox, $GUI_DISABLE)
    EndIf
-   if IniRead($ini_path,"Mouse","SensCapScale","0") = 1 Then
+   if IniRead($ini_path,"Mouse","SensCapScale","0") = 1 Then	;Post-Scale
 	  GUICtrlSetState($senscapscaleitem, $GUI_CHECKED)
    EndIf
-   if IniRead($ini_path,"Mouse","SensCapScale2","0") = 1 Then
+   if IniRead($ini_path,"Mouse","SensCapScale2","0") = 1 Then	;Pre-Scale
 	  GUICtrlSetState($senscapscaleitem2, $GUI_CHECKED)
    EndIf
-   if IniRead($ini_path,"Mouse","AccelScale","0") = 1 Then
+   if IniRead($ini_path,"Mouse","AccelScale","0") = 1 Then		;Post-Scale
 	  GUICtrlSetState($accelscaleitem, $GUI_CHECKED)
    EndIf
-   if IniRead($ini_path,"Mouse","AccelScale2","0") = 1 Then
+   if IniRead($ini_path,"Mouse","AccelScale2","0") = 1 Then		;Pre-Scale
 	  GUICtrlSetState($accelscaleitem2, $GUI_CHECKED)
    EndIf
    if IniRead($ini_path,"Mouse","LockPreScale","1") = 1 Then
@@ -447,7 +446,7 @@ Func _ReadValsFromConfig() ; Get existing values from the Config
         Return False
     EndIf
 
-   While 1
+   While 1	;I should re-write this using a switch, it'd look cleaner
 	  $line = FileReadLine($hFileOpen)
 	  If @error = -1 Then ExitLoop
 	  $aVariable = StringSplit($line," = ",1)
@@ -551,7 +550,6 @@ Func _ReadProfile($file, $silentsuccess = 0) ; read $file to current settings
    GUICtrlSetData($m_new_power, IniRead($file,"MouseSettings","Power","2"))
    GUICtrlSetData($m_new_prexscale, IniRead($file,"MouseSettings","Pre-ScaleX","1"))
    GUICtrlSetData($m_new_preyscale, IniRead($file,"MouseSettings","Pre-ScaleY","1"))
-;   GUICtrlSetData($m_new_postscale, IniRead($file,"MouseSettings","Post-Scale","1")) ; old driver version without separate x/y
    GUICtrlSetData($m_new_postxscale, IniRead($file,"MouseSettings","Post-ScaleX",IniRead($file,"MouseSettings","Post-Scale","1"))) ; if the new value isn't there, get the old, or default to 1
    GUICtrlSetData($m_new_postyscale, IniRead($file,"MouseSettings","Post-ScaleY",IniRead($file,"MouseSettings","Post-Scale","1"))) ; if the new value isn't there, get the old, or default to 1
    GUICtrlSetData($m_new_anglesnap, IniRead($file,"MouseSettings","AngleSnap","0"))
@@ -726,36 +724,6 @@ Func _MouseInputToOutput($input, $accelmode, $sens, $accel, $senscap, $offset, $
 
    return $output
 EndFunc
-
-#cs
-Func _MouseInputToOutput($input, $sens, $accel, $senscap, $offset, $power, $prescale, $postscale, $speedcap) ; Calculate the effective sensitivity given an input mouse delta and mouse parameters
-
-   Local $output, $rate
-   $output = $sens * $prescale; start with sens
-
-   If $accel > 0 Then
-	  $rate = $input / $frametime_ms
-	  $rate -= $offset
-	  if $rate > 0 Then
-		 $rate *= $accel
-		 $power -= 1
-		 if $power < 0 Then	$power = 0
-		 $output += Exp($power * Log($rate))
-		 if $senscap > 0 AND $output > $senscap Then $output = $senscap
-	  EndIf
-   EndIf
-   $output /= $sens
-
-   If ($speedcap > 0 AND $output*$input > $speedcap) Then
-	  $output = $speedcap / $input
-   EndIf
-
-   $output *= $postscale
-
-   return $output
-EndFunc
-#ce
-
 
 Func _Exit()
    If BitAND(GUICtrlRead($autoprofilecheckbox), $GUI_CHECKED) = $GUI_CHECKED Then
@@ -999,13 +967,14 @@ Func _Main() ; Draw and handle the GUI
 
    TraySetState()
 
-   $GUI = GUICreate("Intercept Mouse Accel Filter Config",710,530,-1, -1 , BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+   $GUI = GUICreate("Intercept Mouse Accel Filter Config",710,530,-1, -1 , BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))	;The window title could be made a variable and re-named
    GUISetState()
    Opt("GUICloseOnESC", 0)
 
    $style = _WinAPI_GetWindowLong($GUI, $GWL_STYLE)
    If BitAnd($style,BitOr($WS_SIZEBOX,$WS_MAXIMIZEBOX)) Then _WinAPI_SetWindowLong($GUI,$GWL_STYLE,BitXOR($style,$WS_SIZEBOX,$WS_MAXIMIZEBOX))
 
+   ;File Menu
    $filemenu = GUICtrlCreateMenu("&File")
    $wizardoption = GUICtrlCreateMenuItem("Configuration &Wizard", $filemenu)
    $usbitem = GUICtrlCreateMenuItem("Set &USB refresh rate", $filemenu)
@@ -1013,6 +982,7 @@ Func _Main() ; Draw and handle the GUI
    GUICtrlCreateMenuItem("", $filemenu, 3) ; create a separator line
    $exititem = GUICtrlCreateMenuItem("E&xit", $filemenu)
 
+   ;Settings Menu
    $settingsmenu = GUICtrlCreateMenu("&Settings")
    $graphoptions = GUICtrlCreateMenuItem("Change &Graph settings", $settingsmenu)
    $prescaleitem = GUICtrlCreateMenuItem("Choose which (X|Y) to plot for &Pre/Post-Scale", $settingsmenu)
@@ -1030,20 +1000,12 @@ Func _Main() ; Draw and handle the GUI
    $manualprofileoptionsitem = GUICtrlCreateMenuItem("Manage &Global Hotkeys", $profilesmenu)
 
 
-   ;GUICtrlSetState(-1, $GUI_UNCHECKED) ; FIXME: What the hell was this doing here?
 
+   ;Help Menu
    $helpmenu = GUICtrlCreateMenu("&Help")
    $blogoption = GUICtrlCreateMenuItem("Mouse Accel &Blog (for this driver/program)", $helpmenu)
    $mousesensweboption = GUICtrlCreateMenuItem("Mouse-&Sensitivity.com (same sens, different game)", $helpmenu)
 
-   ; Blog link - moved to the "Help" menu.
-;~    $hyperlink = _GUICtrlSysLink_Create($GUI, 'Need more help?  Want to see if anything is new?  Check out the <A HREF="http://mouseaccel.blogspot.com">blog!</a>', 330, 15, 380, 20)
-;~    $Dummy = GUICtrlCreateDummy()
-;~    GUIRegisterMsg($WM_NOTIFY, "WM_NOTIFY")
-
-   ; Draw the settings labels/inputs
-   Local $widthCell, $iOldOpt
-   $iOldOpt = Opt("GUICoordMode", 2)
 
    $widthCell = 90
    $heightCell = 5
@@ -1095,6 +1057,7 @@ Func _Main() ; Draw and handle the GUI
    $m_angle = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
 
 ;   Local $hToolTip = _GUIToolTip_Create(0, BitOR($_TT_ghTTDefaultStyle, $TTS_BALLOON)); balloon style tooltip
+   ;Tooltips
    Local $hToolTip = _GUIToolTip_Create(0); default tooltip
    ;Set the tooltip to last 30 seconds.
    _GUIToolTip_SetDelayTime($hToolTip, $TTDT_AUTOPOP, 30000) ; if I set this to 60 seconds, it seems to go back to 5.
@@ -1277,6 +1240,7 @@ Func _Main() ; Draw and handle the GUI
 			_Draw_Graph()
 		 Case $msg = $buttonYscaleup
 			$graph_y /= 1.25
+			$graph_y /= 1.25	;This value should be a variable
 			_Draw_Graph()
 		 Case $msg = $buttonYscaledown
 			$graph_y *= 1.25
@@ -1398,7 +1362,6 @@ Func _Main() ; Draw and handle the GUI
 			   $new = GUICtrlRead($m_new_prexscale)
 			   $power = GUICtrlRead($m_power)
 			   $factor = ($old/$new)^$power
-;			   MsgBox(0,"Test", "old = "& $old &", new = "& $new &", power = " & $power &", factor = "& $factor &@CRLF)
 			   GUICtrlSetData($m_new_accel, Round($factor*GUICtrlRead($m_accel),4))
 			EndIf
 			If BitAND(GUICtrlRead($lockprescaleitem), $GUI_CHECKED) = $GUI_CHECKED Then

@@ -114,7 +114,7 @@ Thanks to "The Man" and nGolf for the help!
 1.00 (10/14/13)
 - Initial release.  Control registry settings and graph current versus 'new' prior to saving to registry.
 
-;~ Ideas/fixes to implement:
+Ideas/fixes to implement:
 - Option to have global hotkeys work on holding down, then upon release return to default
 - Bug: double clicking color chooser creates a duplicate that isn't clickable?
 - Update graph on changing any new input?
@@ -142,8 +142,10 @@ Global $GraphStamp = 0	;Used to make sure we aren't drawing an old request
 ;These are GUI elements— Don't touch these.
 Global $GUI, $Graph, $ProfileGUI, $ProfileLabel, $hyperlink, $Dummy
 Global $mode0 = "QuakeLive", $mode1 = "Natural", $mode2 = "Logarithmic"	;Mode names
-Global $m_accelmode, $m_sens, $m_accel, $m_senscap, $m_offset, $m_power, $m_prexscale, $m_preyscale, $m_postxscale, $m_postyscale, $m_angle, $m_anglesnap, $m_speedcap
-Global $m_new_accelmode, $m_new_sens, $m_new_accel, $m_new_senscap, $m_new_offset, $m_new_power, $m_new_prexscale, $m_new_preyscale, $m_new_postxscale, $m_new_postyscale, $m_new_angle, $m_new_anglesnap, $m_new_speedcap
+;New variables to store the actual settings
+Global $v_accelmode, $v_sens, $v_accel, $v_senscap, $v_offset, $v_power, $v_prexscale, $v_preyscale, $v_postxscale, $v_postyscale, $v_angle, $v_anglesnap, $v_speedcap
+;Array format: $g_option = [Label, Input, Current]. $g_ = "Gui element"
+Global $g_accelmode[3], $g_sens[3], $g_accel[3], $g_senscap[3], $g_offset[3], $g_power[3], $g_prexscale[3], $g_preyscale[3], $g_postxscale[3], $g_postyscale[3], $g_angle[3], $g_anglesnap[3], $g_speedcap[3]
 Global $m_driverenabled, $m_new_driverenabled, $autoprofilecheckbox, $openprofilebutton, $manualprofilecheckbox
 Global $senscapscaleitem, $senscapscaleitem2, $accelscaleitem, $accelscaleitem2
 Global $advancedsettingsitem, $lockpostscaleitem, $lockprescaleitem
@@ -235,11 +237,11 @@ Func _ReadIni()	;Read from settings.ini file
 	EndIf
 	if IniRead($ini_path,"Mouse","LockPreScale","1") = 1 Then
 		GUICtrlSetState($lockprescaleitem, $GUI_CHECKED)
-		GUICtrlSetState($m_new_preyscale, $GUI_DISABLE)
+		GUICtrlSetState($g_preyscale[1], $GUI_DISABLE)
 	EndIf
 	if IniRead($ini_path,"Mouse","LockPostScale","1") = 1 Then
 		GUICtrlSetState($lockpostscaleitem, $GUI_CHECKED)
-		GUICtrlSetState($m_new_postyscale, $GUI_DISABLE)
+		GUICtrlSetState($g_postyscale[1], $GUI_DISABLE)
 	EndIf
 EndFunc
 
@@ -294,80 +296,80 @@ EndFunc
 
 Func _WriteValsToConfig($silentsuccess = 0)	;Write new values to 'current' values and settings.txt.
 	;If bad values exist, fail before doing anything.
-	If Not(GUICtrlRead($m_new_accelmode) == $mode0 Or GUICtrlRead($m_new_accelmode) == $mode1 Or GUICtrlRead($m_new_accelmode) == $mode2) Then
+	If Not(GUICtrlRead($g_accelmode[1]) == $mode0 Or GUICtrlRead($g_accelmode[1]) == $mode1 Or GUICtrlRead($g_accelmode[1]) == $mode2) Then
 		MsgBox(0x10, "Failure", "AccelMode must be one of the listed modes", 3, $GUI)
 		Return 1
 	EndIf
-	If _StringIsNumber(GUICtrlRead($m_new_sens)) = False or Number(GUICtrlRead($m_new_sens)) <= 0 Then
+	If _StringIsNumber(GUICtrlRead($g_sens[1])) = False or Number(GUICtrlRead($g_sens[1])) <= 0 Then
 		MsgBox(0x10, "Failure", "Sensitivity must be a number and > 0.", 3, $GUI)
 		Return 1
 	EndIf
-	If _StringIsNumber(GUICtrlRead($m_new_accel)) = False or Number(GUICtrlRead($m_new_accel)) < 0 Then
+	If _StringIsNumber(GUICtrlRead($g_accel[1])) = False or Number(GUICtrlRead($g_accel[1])) < 0 Then
 		MsgBox(0x10, "Failure", "Acceleration must be a number and >= 0.", 3, $GUI)
 		Return 1
 	EndIf
-	If GUICtrlRead($m_new_accelmode) <> "Natural" Then
-		If _StringIsNumber(GUICtrlRead($m_new_senscap)) = False or Number(GUICtrlRead($m_new_senscap)) < 0 Then
+	If GUICtrlRead($g_accelmode[1]) <> "Natural" Then
+		If _StringIsNumber(GUICtrlRead($g_senscap[1])) = False or Number(GUICtrlRead($g_senscap[1])) < 0 Then
 			MsgBox(0x10, "Failure", "Sensitivity Cap must be a number and >= 0.", 3, $GUI)
 			Return 1
 		EndIf
 	Else
-		If _StringIsNumber(GUICtrlRead($m_new_senscap)) = False or Number(GUICtrlRead($m_new_senscap)) < 1 Then	;The limit to 1 senscap changes in natural mode
+		If _StringIsNumber(GUICtrlRead($g_senscap[1])) = False or Number(GUICtrlRead($g_senscap[1])) < 1 Then	;The limit to 1 senscap changes in natural mode
 			MsgBox(0x10, "Failure", "While using Natural acceleration Sensitivity Cap must be a number and >= 1.", 3, $GUI)
 			Return 1
 		EndIf
 	EndIf
-	If _StringIsNumber(GUICtrlRead($m_new_speedcap)) = False or Number(GUICtrlRead($m_new_speedcap)) < 0 Then
+	If _StringIsNumber(GUICtrlRead($g_speedcap[1])) = False or Number(GUICtrlRead($g_speedcap[1])) < 0 Then
 		MsgBox(0x10, "Failure", "Speed Cap must be a number and >= 0. (0 disables)", 3, $GUI)
 		Return 1
 	EndIf
-	If _StringIsNumber(GUICtrlRead($m_new_offset)) = False Then
+	If _StringIsNumber(GUICtrlRead($g_offset[1])) = False Then
 		MsgBox(0x10, "Failure", "Offset must be a number.", 3, $GUI)
 		Return 1
 	EndIf
-	If _StringIsNumber(GUICtrlRead($m_new_power)) = False or Number(GUICtrlRead($m_new_power)) < 0 Then
+	If _StringIsNumber(GUICtrlRead($g_power[1])) = False or Number(GUICtrlRead($g_power[1])) < 0 Then
 		MsgBox(0x10, "Failure", "Power must be a number and >= 0.", 3, $GUI)
 		Return 1
 	EndIf
-	If _StringIsNumber(GUICtrlRead($m_new_prexscale)) = False or Number(GUICtrlRead($m_new_prexscale)) <= 0 Then
+	If _StringIsNumber(GUICtrlRead($g_prexscale[1])) = False or Number(GUICtrlRead($g_prexscale[1])) <= 0 Then
 		MsgBox(0x10, "Failure", "Pre-Scale X must be a number and > 0.", 3, $GUI)
 		Return 1
 	EndIf
-	If _StringIsNumber(GUICtrlRead($m_new_preyscale)) = False or Number(GUICtrlRead($m_new_preyscale)) <= 0 Then
+	If _StringIsNumber(GUICtrlRead($g_preyscale[1])) = False or Number(GUICtrlRead($g_preyscale[1])) <= 0 Then
 		MsgBox(0x10, "Failure", "Pre-Scale Y must be a number and > 0.", 3, $GUI)
 		Return 1
 	EndIf
-	If _StringIsNumber(GUICtrlRead($m_new_postxscale)) = False or Number(GUICtrlRead($m_new_postxscale)) <= 0 Then
+	If _StringIsNumber(GUICtrlRead($g_postxscale[1])) = False or Number(GUICtrlRead($g_postxscale[1])) <= 0 Then
 		MsgBox(0x10, "Failure", "Post Scale X must be a number and > 0.", 3, $GUI)
 		Return 1
 	EndIf
-	If _StringIsNumber(GUICtrlRead($m_new_postyscale)) = False or Number(GUICtrlRead($m_new_postyscale)) <= 0 Then
+	If _StringIsNumber(GUICtrlRead($g_postyscale[1])) = False or Number(GUICtrlRead($g_postyscale[1])) <= 0 Then
 		MsgBox(0x10, "Failure", "Post Scale Y must be a number and > 0.", 3, $GUI)
 		Return 1
 	EndIf
-	If _StringIsNumber(GUICtrlRead($m_new_angle)) = False Then
+	If _StringIsNumber(GUICtrlRead($g_angle[1])) = False Then
 		MsgBox(0x10, "Failure", "Angle must be a number.", 3, $GUI)
 		Return 1
 	EndIf
-	If _StringIsNumber(GUICtrlRead($m_new_anglesnap)) = False or Number(GUICtrlRead($m_new_anglesnap)) < 0 Then
+	If _StringIsNumber(GUICtrlRead($g_anglesnap[1])) = False or Number(GUICtrlRead($g_anglesnap[1])) < 0 Then
 		MsgBox(0x10, "Failure", "Angle Snap must be a number and >= 0.", 3, $GUI)
 		Return 1
 	EndIf
 
 	;Write new values into current values for GUI.
-	GUICtrlSetData($m_accelmode, GUICtrlRead($m_new_accelmode))
-	GUICtrlSetData($m_sens, _GetNumberFromString(GUICtrlRead($m_new_sens)))
-	GUICtrlSetData($m_accel, _GetNumberFromString(GUICtrlRead($m_new_accel)))
-	GUICtrlSetData($m_senscap, _GetNumberFromString(GUICtrlRead($m_new_senscap)))
-	GUICtrlSetData($m_speedcap, _GetNumberFromString(GUICtrlRead($m_new_speedcap)))
-	GUICtrlSetData($m_offset, _GetNumberFromString(GUICtrlRead($m_new_offset)))
-	GUICtrlSetData($m_power, _GetNumberFromString(GUICtrlRead($m_new_power)))
-	GUICtrlSetData($m_prexscale, _GetNumberFromString(GUICtrlRead($m_new_prexscale)))
-	GUICtrlSetData($m_preyscale, _GetNumberFromString(GUICtrlRead($m_new_preyscale)))
-	GUICtrlSetData($m_postxscale, _GetNumberFromString(GUICtrlRead($m_new_postxscale)))
-	GUICtrlSetData($m_postyscale, _GetNumberFromString(GUICtrlRead($m_new_postyscale)))
-	GUICtrlSetData($m_angle, _GetNumberFromString(GUICtrlRead($m_new_angle)))
-	GUICtrlSetData($m_anglesnap, _GetNumberFromString(GUICtrlRead($m_new_anglesnap)))
+	GUICtrlSetData($g_accelmode[2], GUICtrlRead($g_accelmode[1]))
+	GUICtrlSetData($g_sens[2], _GetNumberFromString(GUICtrlRead($g_sens[1])))
+	GUICtrlSetData($g_accel[2], _GetNumberFromString(GUICtrlRead($g_accel[1])))
+	GUICtrlSetData($g_senscap[2], _GetNumberFromString(GUICtrlRead($g_senscap[1])))
+	GUICtrlSetData($g_speedcap[2], _GetNumberFromString(GUICtrlRead($g_speedcap[1])))
+	GUICtrlSetData($g_offset[2], _GetNumberFromString(GUICtrlRead($g_offset[1])))
+	GUICtrlSetData($g_power[2], _GetNumberFromString(GUICtrlRead($g_power[1])))
+	GUICtrlSetData($g_prexscale[2], _GetNumberFromString(GUICtrlRead($g_prexscale[1])))
+	GUICtrlSetData($g_preyscale[2], _GetNumberFromString(GUICtrlRead($g_preyscale[1])))
+	GUICtrlSetData($g_postxscale[2], _GetNumberFromString(GUICtrlRead($g_postxscale[1])))
+	GUICtrlSetData($g_postyscale[2], _GetNumberFromString(GUICtrlRead($g_postyscale[1])))
+	GUICtrlSetData($g_angle[2], _GetNumberFromString(GUICtrlRead($g_angle[1])))
+	GUICtrlSetData($g_anglesnap[2], _GetNumberFromString(GUICtrlRead($g_anglesnap[1])))
 	If BitAND(GUICtrlRead($m_new_driverenabled), $GUI_CHECKED) = $GUI_CHECKED Then
 		GUICtrlSetState($m_driverenabled, $GUI_CHECKED)
 	Else
@@ -375,10 +377,10 @@ Func _WriteValsToConfig($silentsuccess = 0)	;Write new values to 'current' value
 	EndIf
 
 	;Disable power during natural accel
-	If GUICtrlRead($m_new_accelmode) == $mode1 OR GUICtrlRead($m_new_accelmode) == $mode2 Then
-		GUICtrlSetState($m_new_power, $GUI_DISABLE)
+	If GUICtrlRead($g_accelmode[1]) == $mode1 OR GUICtrlRead($g_accelmode[1]) == $mode2 Then
+		GUICtrlSetState($g_power[1], $GUI_DISABLE)
 	Else
-		GUICtrlSetState($m_new_power, $GUI_ENABLE)
+		GUICtrlSetState($g_power[1], $GUI_ENABLE)
 	EndIf
 
 	;Write to Config
@@ -392,19 +394,19 @@ Func _WriteValsToConfig($silentsuccess = 0)	;Write new values to 'current' value
 	EndIf
 
 	;Write data to the file using the handle returned by FileOpen.
-	FileWriteLine($hFileOpen, "AccelMode = " & _ConvertAccelMode(GUICtrlRead($m_new_accelmode)))
-	FileWriteLine($hFileOpen, "Sensitivity = " & GUICtrlRead($m_new_sens))
-	FileWriteLine($hFileOpen, "Acceleration = " & GUICtrlRead($m_new_accel))
-    FileWriteLine($hFileOpen, "SensitivityCap = " & GUICtrlRead($m_new_senscap))
-    FileWriteLine($hFileOpen, "Offset = " & GUICtrlRead($m_new_offset))
-    FileWriteLine($hFileOpen, "Power = " & GUICtrlRead($m_new_power))
-    FileWriteLine($hFileOpen, "Pre-ScaleX = " & GUICtrlRead($m_new_prexscale))
-    FileWriteLine($hFileOpen, "Pre-ScaleY = " & GUICtrlRead($m_new_preyscale))
-    FileWriteLine($hFileOpen, "Post-ScaleX = " & GUICtrlRead($m_new_postxscale))
-    FileWriteLine($hFileOpen, "Post-ScaleY = " & GUICtrlRead($m_new_postyscale))
-    FileWriteLine($hFileOpen, "AngleAdjustment = " & GUICtrlRead($m_new_angle))
-    FileWriteLine($hFileOpen, "AngleSnapping = " & GUICtrlRead($m_new_anglesnap))
-    FileWriteLine($hFileOpen, "SpeedCap = " & GUICtrlRead($m_new_speedcap))
+	FileWriteLine($hFileOpen, "AccelMode = " & _ConvertAccelMode(GUICtrlRead($g_accelmode[1])))
+	FileWriteLine($hFileOpen, "Sensitivity = " & GUICtrlRead($g_sens[1] ))
+	FileWriteLine($hFileOpen, "Acceleration = " & GUICtrlRead($g_accel[1]))
+    FileWriteLine($hFileOpen, "SensitivityCap = " & GUICtrlRead($g_senscap[1]))
+    FileWriteLine($hFileOpen, "Offset = " & GUICtrlRead($g_offset[1]))
+    FileWriteLine($hFileOpen, "Power = " & GUICtrlRead($g_power[1]))
+    FileWriteLine($hFileOpen, "Pre-ScaleX = " & GUICtrlRead($g_prexscale[1]))
+    FileWriteLine($hFileOpen, "Pre-ScaleY = " & GUICtrlRead($g_preyscale[1]))
+    FileWriteLine($hFileOpen, "Post-ScaleX = " & GUICtrlRead($g_postxscale[1]))
+    FileWriteLine($hFileOpen, "Post-ScaleY = " & GUICtrlRead($g_postyscale[1]))
+    FileWriteLine($hFileOpen, "AngleAdjustment = " & GUICtrlRead($g_angle[1]))
+    FileWriteLine($hFileOpen, "AngleSnapping = " & GUICtrlRead($g_anglesnap[1]))
+    FileWriteLine($hFileOpen, "SpeedCap = " & GUICtrlRead($g_speedcap[1]))
     FileWriteLine($hFileOpen, "FancyOutput = 0")
 
 	;Close the handle returned by FileOpen.
@@ -446,54 +448,67 @@ Func _ReadValsFromConfig()	;Get existing values from the Config
 		$aVariable = StringSplit($line," = ",1)
 		Switch $aVariable[1]
 			Case "AccelMode"
-				GUICtrlSetData($m_accelmode, _ConvertAccelMode($aVariable[2]))
-				GUICtrlSetData($m_new_accelmode, _ConvertAccelMode($aVariable[2]))
+				;$v_accelmode = _ConvertAccelMode($aVariable[2])
+				GUICtrlSetData($g_accelmode[2], _ConvertAccelMode($aVariable[2]))
+				GUICtrlSetData($g_accelmode[1], _ConvertAccelMode($aVariable[2]))
 			Case "Sensitivity"
-				GUICtrlSetData($m_sens, $aVariable[2])
-				GUICtrlSetData($m_new_sens, $aVariable[2])
+				;$v_sens = $aVariable[2]
+				GUICtrlSetData($g_sens[2], $aVariable[2])
+				GUICtrlSetData($g_sens[1], $aVariable[2])
 			Case "Acceleration"
-				GUICtrlSetData($m_accel, $aVariable[2])
-				GUICtrlSetData($m_new_accel, $aVariable[2])
+				;$v_accel = $aVariable[2]
+				GUICtrlSetData($g_accel[2], $aVariable[2])
+				GUICtrlSetData($g_accel[1], $aVariable[2])
 			Case "SensitivityCap"
-				GUICtrlSetData($m_senscap, $aVariable[2])
-				GUICtrlSetData($m_new_senscap, $aVariable[2])
+				;$v_senscap = $aVariable[2]
+				GUICtrlSetData($g_senscap[2], $aVariable[2])
+				GUICtrlSetData($g_senscap[1], $aVariable[2])
 			Case "Offset"
-				GUICtrlSetData($m_offset, $aVariable[2])
-				GUICtrlSetData($m_new_offset, $aVariable[2])
+				;$v_offset = $aVariable[2]
+				GUICtrlSetData($g_offset[2], $aVariable[2])
+				GUICtrlSetData($g_offset[1], $aVariable[2])
 			Case "Power"
-				GUICtrlSetData($m_power, $aVariable[2])
-				GUICtrlSetData($m_new_power, $aVariable[2])
+				;$v_power = $aVariable[2]
+				GUICtrlSetData($g_power[2], $aVariable[2])
+				GUICtrlSetData($g_power[1], $aVariable[2])
 			Case "Pre-ScaleX"
-				GUICtrlSetData($m_prexscale, $aVariable[2])
-				GUICtrlSetData($m_new_prexscale, $aVariable[2])
+				;$v_prexscale = $aVariable[2]
+				GUICtrlSetData($g_prexscale[2], $aVariable[2])
+				GUICtrlSetData($g_prexscale[1], $aVariable[2])
 			Case "Pre-ScaleY"
-				GUICtrlSetData($m_preyscale, $aVariable[2])
-				GUICtrlSetData($m_new_preyscale, $aVariable[2])
+				;$v_preyscale = $aVariable[2]
+				GUICtrlSetData($g_preyscale[2], $aVariable[2])
+				GUICtrlSetData($g_preyscale[1], $aVariable[2])
 			Case "Post-ScaleX"
-				GUICtrlSetData($m_postxscale, $aVariable[2])
-				GUICtrlSetData($m_new_postxscale, $aVariable[2])
+				;$v_postxscale = $aVariable[2]
+				GUICtrlSetData($g_postxscale[2], $aVariable[2])
+				GUICtrlSetData($g_postxscale[1], $aVariable[2])
 			Case "Post-ScaleY"
-				GUICtrlSetData($m_postyscale, $aVariable[2])
-				GUICtrlSetData($m_new_postyscale, $aVariable[2])
+				;$v_postyscale = $aVariable[2]
+				GUICtrlSetData($g_postyscale[2], $aVariable[2])
+				GUICtrlSetData($g_postyscale[1], $aVariable[2])
 			Case "AngleAdjustment"
-				GUICtrlSetData($m_angle, $aVariable[2])
-				GUICtrlSetData($m_new_angle, $aVariable[2])
+				;$v_angle = $aVariable[2]
+				GUICtrlSetData($g_angle[2], $aVariable[2])
+				GUICtrlSetData($g_angle[1], $aVariable[2])
 			Case "AngleSnapping"
-				GUICtrlSetData($m_anglesnap, $aVariable[2])
-				GUICtrlSetData($m_new_anglesnap, $aVariable[2])
+				;$v_anglesnap = $aVariable[2]
+				GUICtrlSetData($g_anglesnap[2], $aVariable[2])
+				GUICtrlSetData($g_anglesnap[1], $aVariable[2])
 			Case "SpeedCap"
-				GUICtrlSetData($m_speedcap, $aVariable[2])
-				GUICtrlSetData($m_new_speedcap, $aVariable[2])
+				;$v_speedcap = $aVariable[2]
+				GUICtrlSetData($g_speedcap[2], $aVariable[2])
+				GUICtrlSetData($g_speedcap[1], $aVariable[2])
 		EndSwitch
 	WEnd
 
 	FileClose($hFileOpen)
 
 	;Disable power during natural accel
-	If GUICtrlRead($m_new_accelmode) == $mode1 OR GUICtrlRead($m_new_accelmode) == $mode2 Then
-		GUICtrlSetState($m_new_power, $GUI_DISABLE)
+	If GUICtrlRead($g_accelmode[1]) == $mode1 OR GUICtrlRead($g_accelmode[1]) == $mode2 Then
+		GUICtrlSetState($g_power[1], $GUI_DISABLE)
 	Else
-		GUICtrlSetState($m_new_power, $GUI_ENABLE)
+		GUICtrlSetState($g_power[1], $GUI_ENABLE)
 	EndIf
 
 	_KillAllAccelProcesses()
@@ -506,19 +521,19 @@ EndFunc
 Func _WriteProfile($file, $silentsuccess = 0)	;Save current settings to $file
 	If StringRight($file, 8) <> ".profile" Then $file &= ".profile"
 
-	IniWrite($file,"MouseSettings","AccelMode",GUICtrlRead($m_accelmode))
-	IniWrite($file,"MouseSettings","Sensitivity",GUICtrlRead($m_sens))
-	IniWrite($file,"MouseSettings","Acceleration",GUICtrlRead($m_accel))
-	IniWrite($file,"MouseSettings","SensitivityCap",GUICtrlRead($m_senscap))
-	IniWrite($file,"MouseSettings","SpeedCap",GUICtrlRead($m_speedcap))
-	IniWrite($file,"MouseSettings","Offset",GUICtrlRead($m_offset))
-	IniWrite($file,"MouseSettings","Power",GUICtrlRead($m_power))
-	IniWrite($file,"MouseSettings","Pre-ScaleX",GUICtrlRead($m_prexscale))
-	IniWrite($file,"MouseSettings","Pre-ScaleY",GUICtrlRead($m_preyscale))
-	IniWrite($file,"MouseSettings","Post-ScaleX",GUICtrlRead($m_postxscale))
-	IniWrite($file,"MouseSettings","Post-ScaleY",GUICtrlRead($m_postyscale))
-	IniWrite($file,"MouseSettings","AngleSnap",GUICtrlRead($m_anglesnap))
-	IniWrite($file,"MouseSettings","Angle",GUICtrlRead($m_angle))
+	IniWrite($file,"MouseSettings","AccelMode",GUICtrlRead($g_accelmode[2]))
+	IniWrite($file,"MouseSettings","Sensitivity",GUICtrlRead($g_sens[2]))
+	IniWrite($file,"MouseSettings","Acceleration",GUICtrlRead($g_accel[2]))
+	IniWrite($file,"MouseSettings","SensitivityCap",GUICtrlRead($g_senscap[2]))
+	IniWrite($file,"MouseSettings","SpeedCap",GUICtrlRead($g_speedcap[2]))
+	IniWrite($file,"MouseSettings","Offset",GUICtrlRead($g_offset[2]))
+	IniWrite($file,"MouseSettings","Power",GUICtrlRead($g_power[2]))
+	IniWrite($file,"MouseSettings","Pre-ScaleX",GUICtrlRead($g_prexscale[2]))
+	IniWrite($file,"MouseSettings","Pre-ScaleY",GUICtrlRead($g_preyscale[2]))
+	IniWrite($file,"MouseSettings","Post-ScaleX",GUICtrlRead($g_postxscale[2]))
+	IniWrite($file,"MouseSettings","Post-ScaleY",GUICtrlRead($g_postyscale[2]))
+	IniWrite($file,"MouseSettings","AngleSnap",GUICtrlRead($g_anglesnap[2]))
+	IniWrite($file,"MouseSettings","Angle",GUICtrlRead($g_angle[2]))
 
 	If BitAND(GUICtrlRead($m_new_driverenabled), $GUI_CHECKED) = $GUI_CHECKED Then
 		IniWrite($file,"MouseSettings","Enabled","1")
@@ -535,19 +550,19 @@ Func _ReadProfile($file, $silentsuccess = 0)	;Read $file to current settings
 		Return
 	EndIf
 
-	GUICtrlSetData($m_new_accelmode, IniRead($file,"MouseSettings","AccelMode",$mode0))
-	GUICtrlSetData($m_new_sens, IniRead($file,"MouseSettings","Sensitivity","1"))
-	GUICtrlSetData($m_new_accel, IniRead($file,"MouseSettings","Acceleration","0"))
-	GUICtrlSetData($m_new_senscap, IniRead($file,"MouseSettings","SensitivityCap","0"))
-	GUICtrlSetData($m_new_speedcap, IniRead($file,"MouseSettings","SpeedCap","0"))
-	GUICtrlSetData($m_new_offset, IniRead($file,"MouseSettings","Offset","0"))
-	GUICtrlSetData($m_new_power, IniRead($file,"MouseSettings","Power","2"))
-	GUICtrlSetData($m_new_prexscale, IniRead($file,"MouseSettings","Pre-ScaleX","1"))
-	GUICtrlSetData($m_new_preyscale, IniRead($file,"MouseSettings","Pre-ScaleY","1"))
-	GUICtrlSetData($m_new_postxscale, IniRead($file,"MouseSettings","Post-ScaleX",IniRead($file,"MouseSettings","Post-Scale","1"))) ; if the new value isn't there, get the old, or default to 1
-	GUICtrlSetData($m_new_postyscale, IniRead($file,"MouseSettings","Post-ScaleY",IniRead($file,"MouseSettings","Post-Scale","1"))) ; if the new value isn't there, get the old, or default to 1
-	GUICtrlSetData($m_new_anglesnap, IniRead($file,"MouseSettings","AngleSnap","0"))
-	GUICtrlSetData($m_new_angle, IniRead($file,"MouseSettings","Angle","0"))
+	GUICtrlSetData($g_accelmode[1], IniRead($file,"MouseSettings","AccelMode",$mode0))
+	GUICtrlSetData($g_sens[1], IniRead($file,"MouseSettings","Sensitivity","1"))
+	GUICtrlSetData($g_accel[1], IniRead($file,"MouseSettings","Acceleration","0"))
+	GUICtrlSetData($g_senscap[1], IniRead($file,"MouseSettings","SensitivityCap","0"))
+	GUICtrlSetData($g_speedcap[1], IniRead($file,"MouseSettings","SpeedCap","0"))
+	GUICtrlSetData($g_offset[1], IniRead($file,"MouseSettings","Offset","0"))
+	GUICtrlSetData($g_power[1], IniRead($file,"MouseSettings","Power","2"))
+	GUICtrlSetData($g_prexscale[1], IniRead($file,"MouseSettings","Pre-ScaleX","1"))
+	GUICtrlSetData($g_preyscale[1], IniRead($file,"MouseSettings","Pre-ScaleY","1"))
+	GUICtrlSetData($g_postxscale[1], IniRead($file,"MouseSettings","Post-ScaleX",IniRead($file,"MouseSettings","Post-Scale","1"))) ; if the new value isn't there, get the old, or default to 1
+	GUICtrlSetData($g_postyscale[1], IniRead($file,"MouseSettings","Post-ScaleY",IniRead($file,"MouseSettings","Post-Scale","1"))) ; if the new value isn't there, get the old, or default to 1
+	GUICtrlSetData($g_anglesnap[1], IniRead($file,"MouseSettings","AngleSnap","0"))
+	GUICtrlSetData($g_angle[1], IniRead($file,"MouseSettings","Angle","0"))
 
 	if IniRead($file,"MouseSettings","Enabled","1") = "1" Then
 		GUICtrlSetState($m_new_driverenabled, $GUI_CHECKED)
@@ -623,16 +638,16 @@ Func _Draw_Graph()	;Refreshes graph, starts with current values (green line) the
 		;----- draw lines -----
 		$First = True
 		if $graph_scale = "X" then
-			$prescale = GUICtrlRead($m_prexscale)
-			$postscale = GUICtrlRead($m_postxscale)
+			$prescale = GUICtrlRead($g_prexscale[2])
+			$postscale = GUICtrlRead($g_postxscale[2])
 		Else
-			$prescale = GUICtrlRead($m_preyscale)
-			$postscale = GUICtrlRead($m_postyscale)
+			$prescale = GUICtrlRead($g_preyscale[2])
+			$postscale = GUICtrlRead($g_postyscale[2])
 		EndIf
 		For $i = 0 to $graph_x Step $graph_x/$graphdensity
 			If $GraphStamp <> $TestStamp Then Return	;If the global variable changed since we started, stop updating.
 			If BitAND(GUICtrlRead($m_driverenabled), $GUI_CHECKED) = $GUI_CHECKED Then
-				$y = _MouseInputToOutput($i, GUICtrlRead($m_accelmode), GUICtrlRead($m_sens), GUICtrlRead($m_accel), GUICtrlRead($m_senscap), GUICtrlRead($m_offset), GUICtrlRead($m_power), $prescale, $postscale, GUICtrlRead($m_speedcap))
+				$y = _MouseInputToOutput($i, GUICtrlRead($g_accelmode[2]), GUICtrlRead($g_sens[2]), GUICtrlRead($g_accel[2]), GUICtrlRead($g_senscap[2]), GUICtrlRead($g_offset[2]), GUICtrlRead($g_power[2]), $prescale, $postscale, GUICtrlRead($g_speedcap[2]))
 			Else
 				$y = 1
 			EndIf
@@ -646,16 +661,16 @@ Func _Draw_Graph()	;Refreshes graph, starts with current values (green line) the
 		_GraphGDIPlus_Set_PenColor($Graph, $TransparentPen + Dec($ProfileColors[2])) ; AARRGGBB
 		$First = True
 		if $graph_scale = "X" then
-			$prescale = GUICtrlRead($m_new_prexscale)
-			$postscale = GUICtrlRead($m_new_postxscale)
+			$prescale = GUICtrlRead($g_prexscale[1])
+			$postscale = GUICtrlRead($g_postxscale[1])
 		Else
-			$prescale = GUICtrlRead($m_new_preyscale)
-			$postscale = GUICtrlRead($m_new_postyscale)
+			$prescale = GUICtrlRead($g_preyscale[1])
+			$postscale = GUICtrlRead($g_postyscale[1])
 		EndIf
 		For $i = 0 to $graph_x Step $graph_x/$graphdensity
 			If $GraphStamp <> $TestStamp Then Return
 			If BitAND(GUICtrlRead($m_new_driverenabled), $GUI_CHECKED) = $GUI_CHECKED Then
-				$y = _MouseInputToOutput($i, GUICtrlRead($m_new_accelmode), GUICtrlRead($m_new_sens), GUICtrlRead($m_new_accel), GUICtrlRead($m_new_senscap), GUICtrlRead($m_new_offset), GUICtrlRead($m_new_power), $prescale, $postscale, GUICtrlRead($m_new_speedcap))
+				$y = _MouseInputToOutput($i, GUICtrlRead($g_accelmode[1]), GUICtrlRead($g_sens[1]), GUICtrlRead($g_accel[1]), GUICtrlRead($g_senscap[1]), GUICtrlRead($g_offset[1]), GUICtrlRead($g_power[1]), $prescale, $postscale, GUICtrlRead($g_speedcap[1]))
 			Else
 				$y = 1
 			EndIf
@@ -917,18 +932,18 @@ Func _ConfigurationWizard()	;Auto configure settings per user input (DPI and HZ)
 	EndIf
 
 	;Default settings for these
-	GUICtrlSetData($m_new_senscap, 2)
-	GUICtrlSetData($m_new_sens, 1)
-	GUICtrlSetData($m_new_speedcap, 0)
-	GUICtrlSetData($m_new_offset, 0)
-	GUICtrlSetData($m_new_power, 2)
-	GUICtrlSetData($m_new_prexscale, 1)
-	GUICtrlSetData($m_new_preyscale, 1)
-	GUICtrlSetData($m_new_anglesnap, 0)
-	GUICtrlSetData($m_new_angle, 0)
-	GUICtrlSetData($m_new_accel, 69/$mouse_dpi)
-	GUICtrlSetData($m_new_postxscale, 690/$mouse_dpi)
-	GUICtrlSetData($m_new_postyscale, 690/$mouse_dpi)
+	GUICtrlSetData($g_senscap[1], 2)
+	GUICtrlSetData($g_sens[1], 1)
+	GUICtrlSetData($g_speedcap[1], 0)
+	GUICtrlSetData($g_offset[1], 0)
+	GUICtrlSetData($g_power[1], 2)
+	GUICtrlSetData($g_prexscale[1], 1)
+	GUICtrlSetData($g_preyscale[1], 1)
+	GUICtrlSetData($g_anglesnap[1], 0)
+	GUICtrlSetData($g_angle[1], 0)
+	GUICtrlSetData($g_accel[1], 69/$mouse_dpi)
+	GUICtrlSetData($g_postxscale[1], 690/$mouse_dpi)
+	GUICtrlSetData($g_postyscale[1], 690/$mouse_dpi)
 
 
 
@@ -1005,48 +1020,48 @@ Func _Main()	;Draw and handle the GUI
 	GUICtrlCreateLabel("New", 0, -1) ; next Cell
 	GUICtrlCreateLabel("Current", 0, -1) ; next Cell
 	GUISetFont (9, 400)
-	GUICtrlCreateLabel("AccelMode", -3 * $widthCell, $heightCell) ; next line
-	$m_new_accelmode = GUICtrlCreateCombo($mode0, 0, -1) ; same line, next cell
-	GUICtrlSetData($m_new_accelmode, $mode1)
-	GUICtrlSetData($m_new_accelmode, $mode2)
-	$m_accelmode = GUICtrlCreateLabel($mode1, 0, -1) ; same line, next cell
-	GUICtrlCreateLabel("Sensitivity", -3 * $widthCell, $heightCell) ; next line
-	$m_new_sens = GUICtrlCreateInput("1", 0, -1) ; same line, next cell
-	$m_sens = GUICtrlCreateLabel("1", 0, -1) ; same line, next cell
-	GUICtrlCreateLabel("Acceleration", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$m_new_accel = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
-	$m_accel = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
-	GUICtrlCreateLabel("Sensitivity Cap", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$m_new_senscap = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
-	$m_senscap = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
-	GUICtrlCreateLabel("Speed Cap", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$m_new_speedcap = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
-	$m_speedcap = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
-	GUICtrlCreateLabel("Offset", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$m_new_offset = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
-	$m_offset = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
-	GUICtrlCreateLabel("Power", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$m_new_power = GUICtrlCreateInput("2", 0, -1) ; same line, next cell
-	$m_power = GUICtrlCreateLabel("2", 0, -1) ; same line, next cell
-	GUICtrlCreateLabel("Pre-Scale X", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$m_new_prexscale = GUICtrlCreateInput("1", 0, -1) ; same line, next cell
-	$m_prexscale = GUICtrlCreateLabel("1", 0, -1) ; same line, next cell
-	GUICtrlCreateLabel("Pre-Scale Y", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$m_new_preyscale = GUICtrlCreateInput("1", 0, -1) ; same line, next cell
-	$m_preyscale = GUICtrlCreateLabel("1", 0, -1) ; same line, next cell
-	GUICtrlCreateLabel("Post-Scale X", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$m_new_postxscale = GUICtrlCreateInput("1", 0, -1) ; same line, next cell
-	$m_postxscale = GUICtrlCreateLabel("1", 0, -1) ; same line, next cell
-	GUICtrlCreateLabel("Post-Scale Y", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$m_new_postyscale = GUICtrlCreateInput("1", 0, -1) ; same line, next cell
-	$m_postyscale = GUICtrlCreateLabel("1", 0, -1) ; same line, next cell
-	GUICtrlCreateLabel("AngleSnapping", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$m_new_anglesnap = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
-	$m_anglesnap = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
-	GUICtrlCreateLabel("Angle", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$m_new_angle = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
-	$m_angle = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
 
+	$g_accelmode[0] = GUICtrlCreateLabel("AccelMode", -3 * $widthCell, $heightCell) ; next line
+	$g_accelmode[1] = GUICtrlCreateCombo($mode0, 0, -1) ; same line, next cell
+	$g_accelmode[2] = GUICtrlCreateLabel($mode1, 0, -1) ; same line, next cell
+	GUICtrlSetData($g_accelmode[1], $mode1)
+	GUICtrlSetData($g_accelmode[1], $mode2)
+	$g_sens[0] = GUICtrlCreateLabel("Sensitivity", -3 * $widthCell, $heightCell) ; next line
+	$g_sens[1] = GUICtrlCreateInput("1", 0, -1) ; same line, next cell
+	$g_sens[2] = GUICtrlCreateLabel("1", 0, -1) ; same line, next cell
+	$g_accel[0] = GUICtrlCreateLabel("Acceleration", -3 * $widthCell, $heightCell) ; next line, back a cell
+	$g_accel[1] = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
+	$g_accel[2] = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
+	$g_senscap[0] = GUICtrlCreateLabel("Sensitivity Cap", -3 * $widthCell, $heightCell) ; next line, back a cell
+	$g_senscap[1] = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
+	$g_senscap[2] = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
+	$g_speedcap[0] = GUICtrlCreateLabel("Speed Cap", -3 * $widthCell, $heightCell) ; next line, back a cell
+	$g_speedcap[1] = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
+	$g_speedcap[2] = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
+	$g_offset[0] = GUICtrlCreateLabel("Offset", -3 * $widthCell, $heightCell) ; next line, back a cell
+	$g_offset[1] = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
+	$g_offset[2] = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
+	$g_power[0] = GUICtrlCreateLabel("Power", -3 * $widthCell, $heightCell) ; next line, back a cell
+	$g_power[1] = GUICtrlCreateInput("2", 0, -1) ; same line, next cell
+	$g_power[2] = GUICtrlCreateLabel("2", 0, -1) ; same line, next cell
+	$g_prexscale[0] = GUICtrlCreateLabel("Pre-Scale X", -3 * $widthCell, $heightCell) ; next line, back a cell
+	$g_prexscale[1] = GUICtrlCreateInput("1", 0, -1) ; same line, next cell
+	$g_prexscale[2] = GUICtrlCreateLabel("1", 0, -1) ; same line, next cell
+	$g_preyscale[0] = GUICtrlCreateLabel("Pre-Scale Y", -3 * $widthCell, $heightCell) ; next line, back a cell
+	$g_preyscale[1] = GUICtrlCreateInput("1", 0, -1) ; same line, next cell
+	$g_preyscale[2] = GUICtrlCreateLabel("1", 0, -1) ; same line, next cell
+	$g_postxscale[0] = GUICtrlCreateLabel("Post-Scale X", -3 * $widthCell, $heightCell) ; next line, back a cell
+	$g_postxscale[1] = GUICtrlCreateInput("1", 0, -1) ; same line, next cell
+	$g_postxscale[2] = GUICtrlCreateLabel("1", 0, -1) ; same line, next cell
+	$g_postyscale[0] = GUICtrlCreateLabel("Post-Scale Y", -3 * $widthCell, $heightCell) ; next line, back a cell
+	$g_postyscale[1] = GUICtrlCreateInput("1", 0, -1) ; same line, next cell
+	$g_postyscale[2] = GUICtrlCreateLabel("1", 0, -1) ; same line, next cell
+	$g_anglesnap[0] = GUICtrlCreateLabel("AngleSnapping", -3 * $widthCell, $heightCell) ; next line, back a cell
+	$g_anglesnap[1] = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
+	$g_anglesnap[2] = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
+	$g_angle[0] = GUICtrlCreateLabel("Angle", -3 * $widthCell, $heightCell) ; next line, back a cell
+	$g_angle[1] = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
+	$g_angle[2] = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
 
 	;Tooltips
 	Local $hToolTip = _GUIToolTip_Create(0); default tooltip
@@ -1054,31 +1069,31 @@ Func _Main()	;Draw and handle the GUI
 	_GUIToolTip_SetDelayTime($hToolTip, $TTDT_AUTOPOP, 30000) ; if I set this to 60 seconds, it seems to go back to 5.
 	_GUIToolTip_SetDelayTime($hToolTip, $TTDT_RESHOW, 500) ; don't show a new tooltip till 0.5 secs later
 	_GUIToolTip_SetMaxTipWidth($hToolTip, 500)
-	Local $h_new_accelmode = GUICtrlGetHandle($m_new_accelmode)
+	Local $h_new_accelmode = GUICtrlGetHandle($g_accelmode[1])
 	_GUIToolTip_AddTool($hToolTip, 0, "Select which mode of acceleration to use.", $h_new_accelmode)
-	Local $h_new_sens = GUICtrlGetHandle($m_new_sens)
+	Local $h_new_sens = GUICtrlGetHandle($g_sens[1])
 	_GUIToolTip_AddTool($hToolTip, 0, "This value is used for replicating QuakeLive mouse settings.  If you aren't coming from QL, leave this value at 1.", $h_new_sens)
-	Local $h_new_accel = GUICtrlGetHandle($m_new_accel)
+	Local $h_new_accel = GUICtrlGetHandle($g_accel[1])
 	_GUIToolTip_AddTool($hToolTip, 0, "Controls how quickly the mouse sensitivity will go up.  Dependent on your mouse DPI and USB refresh rate, as well as Sensitivity, Pre-Scale, Post-Scale, and Power variables.", $h_new_accel)
-	Local $h_new_senscap = GUICtrlGetHandle($m_new_senscap)
+	Local $h_new_senscap = GUICtrlGetHandle($g_senscap[1])
 	_GUIToolTip_AddTool($hToolTip, 0, "Determines where your mouse sensitivity will stop being raised by accel.  Consider it a multiplier off of the post-scale variables (e.g.: sens cap of 2 means accel will at most double your sensitivity).", $h_new_senscap)
-	Local $h_new_speedcap = GUICtrlGetHandle($m_new_speedcap)
+	Local $h_new_speedcap = GUICtrlGetHandle($g_speedcap[1])
 	_GUIToolTip_AddTool($hToolTip, 0, "Gimmick variable.  This allows you to lock the max cursor speed, causing a serious dropoff in sensitivity.  Recommend leaving this at 0.", $h_new_speedcap)
-	Local $h_new_offset = GUICtrlGetHandle($m_new_offset)
+	Local $h_new_offset = GUICtrlGetHandle($g_offset[1])
 	_GUIToolTip_AddTool($hToolTip, 0, "Determines how fast you have to move your mouse before accel kicks in.  Allows you to emulate no accel for slower movements.", $h_new_offset)
-	Local $h_new_power = GUICtrlGetHandle($m_new_power)
+	Local $h_new_power = GUICtrlGetHandle($g_power[1])
 	_GUIToolTip_AddTool($hToolTip, 0, "The power of the acceleration curve.  2 = linear, 3 = quadratic.  Accepts floats.", $h_new_power)
-	Local $h_new_prexscale = GUICtrlGetHandle($m_new_prexscale)
+	Local $h_new_prexscale = GUICtrlGetHandle($g_prexscale[1])
 	_GUIToolTip_AddTool($hToolTip, 0, "Flat multiplier for horiztonal movements on top of everything else.  It occurs before other calculations, which makes it scale awkwardly.  HIGHLY RECOMMEND USING POST-SCALE VARIABLES INSTEAD OF PRE-SCALE.", $h_new_prexscale)
-	Local $h_new_preyscale = GUICtrlGetHandle($m_new_preyscale)
+	Local $h_new_preyscale = GUICtrlGetHandle($g_preyscale[1])
 	_GUIToolTip_AddTool($hToolTip, 0, "Flat multiplier for vertical movements on top of everything else.  It occurs before other calculations, which makes it scale awkwardly.  HIGHLY RECOMMEND USING POST-SCALE VARIABLES INSTEAD OF PRE-SCALE.", $h_new_preyscale)
-	Local $h_new_postxscale = GUICtrlGetHandle($m_new_postxscale)
+	Local $h_new_postxscale = GUICtrlGetHandle($g_postxscale[1])
 	_GUIToolTip_AddTool($hToolTip, 0, "Flat multiplier for horiztonal movements on top of everything else.  It occurs after other calculations.  Consider these your main variables for changing your sensitivity.", $h_new_postxscale)
-	Local $h_new_postyscale = GUICtrlGetHandle($m_new_postyscale)
+	Local $h_new_postyscale = GUICtrlGetHandle($g_postyscale[1])
 	_GUIToolTip_AddTool($hToolTip, 0, "Flat multiplier for vertical movements on top of everything else.  It occurs after other calculations.  Consider these your main variables for changing your sensitivity.", $h_new_postyscale)
-	Local $h_new_anglesnap = GUICtrlGetHandle($m_new_anglesnap)
+	Local $h_new_anglesnap = GUICtrlGetHandle($g_anglesnap[1])
 	_GUIToolTip_AddTool($hToolTip, 0, "Takes mouse movements that are close to right angles and snaps them to right angles.  Allows for easy drawing of horizontal/vertical lines.", $h_new_anglesnap)
-	Local $h_new_angle = GUICtrlGetHandle($m_new_angle)
+	Local $h_new_angle = GUICtrlGetHandle($g_angle[1])
 	_GUIToolTip_AddTool($hToolTip, 0, "Rotation of initial mouse movement.  Intended to correct for oddly placed mouse sensors where straight left/right movement of your mouse doesn't correspond to straight left/right movement of your cursor.", $h_new_angle)
 
 
@@ -1316,44 +1331,45 @@ Func _Main()	;Draw and handle the GUI
 			Case $msg = $lockprescaleitem
 				If BitAND(GUICtrlRead($lockprescaleitem), $GUI_CHECKED) = $GUI_CHECKED Then
 					GUICtrlSetState($lockprescaleitem, $GUI_UNCHECKED)
-					GUICtrlSetState($m_new_preyscale, $GUI_ENABLE)
+					GUICtrlSetState($g_preyscale[1], $GUI_ENABLE)
 				Else
 					GUICtrlSetState($lockprescaleitem, $GUI_CHECKED)
-					GUICtrlSetState($m_new_preyscale, $GUI_DISABLE)
-					GUICtrlSetData($m_new_preyscale, GUICtrlRead($m_new_prexscale))
+					GUICtrlSetState($g_preyscale[1], $GUI_DISABLE)
+					GUICtrlSetData($g_preyscale[1], GUICtrlRead($g_prexscale[1]))
 				EndIf
 			Case $msg = $lockpostscaleitem
 				If BitAND(GUICtrlRead($lockpostscaleitem), $GUI_CHECKED) = $GUI_CHECKED Then
 					GUICtrlSetState($lockpostscaleitem, $GUI_UNCHECKED)
-					GUICtrlSetState($m_new_postyscale, $GUI_ENABLE)
+					GUICtrlSetState($g_postyscale[1], $GUI_ENABLE)
 				Else
 					GUICtrlSetState($lockpostscaleitem, $GUI_CHECKED)
-					GUICtrlSetState($m_new_postyscale, $GUI_DISABLE)
-					GUICtrlSetData($m_new_postyscale, GUICtrlRead($m_new_postxscale))
+					GUICtrlSetState($g_postyscale[1], $GUI_DISABLE)
+					GUICtrlSetData($g_postyscale[1], GUICtrlRead($g_postxscale[1]))
 				EndIf
-			Case $msg = $m_new_postxscale
+			Case $msg = $g_postxscale[1]
 				If BitAND(GUICtrlRead($senscapscaleitem), $GUI_CHECKED) = $GUI_CHECKED Then
-					GUICtrlSetData($m_new_senscap, Round(GUICtrlRead($m_senscap)*GUICtrlRead($m_postxscale)/GUICtrlRead($m_new_postxscale),4))
+					GUICtrlSetData($g_senscap[1], Round(GUICtrlRead($g_senscap[2])*GUICtrlRead($g_postxscale[2])/GUICtrlRead($g_postxscale[1]),4))
 				EndIf
 				If BitAND(GUICtrlRead($accelscaleitem), $GUI_CHECKED) = $GUI_CHECKED Then
-					GUICtrlSetData($m_new_accel, Round(GUICtrlRead($m_accel)*GUICtrlRead($m_postxscale)/GUICtrlRead($m_new_postxscale),4))
+					GUICtrlSetData($g_accel[1], Round(GUICtrlRead($g_accel[2])*GUICtrlRead($g_postxscale[2])/GUICtrlRead($g_postxscale[1]),4))
 				EndIf
 				If BitAND(GUICtrlRead($lockpostscaleitem), $GUI_CHECKED) = $GUI_CHECKED Then
-					GUICtrlSetData($m_new_postyscale, GUICtrlRead($m_new_postxscale))
+					GUICtrlSetData($g_postyscale[1], GUICtrlRead($g_postxscale[1]))
 				EndIf
-			Case $msg = $m_new_prexscale
+			Case $msg = $g_prexscale[1]
 				If BitAND(GUICtrlRead($senscapscaleitem2), $GUI_CHECKED) = $GUI_CHECKED Then
-					GUICtrlSetData($m_new_senscap, Round(GUICtrlRead($m_senscap)*GUICtrlRead($m_prexscale)/GUICtrlRead($m_new_prexscale),4))
+					GUICtrlSetData($g_senscap[1], Round(GUICtrlRead($g_senscap[2])*GUICtrlRead($g_prexscale[2])/GUICtrlRead($g_prexscale[1]),4))
 				EndIf
 				If BitAND(GUICtrlRead($accelscaleitem2), $GUI_CHECKED) = $GUI_CHECKED Then
 					Local $old, $new, $power, $factor
-					$old = GUICtrlRead($m_prexscale)
-					$new = GUICtrlRead($m_new_prexscale)
-					$power = GUICtrlRead($m_power)$factor = ($old/$new)^$power
-					GUICtrlSetData($m_new_accel, Round($factor*GUICtrlRead($m_accel),4))
+					$old = GUICtrlRead($g_prexscale[2])
+					$new = GUICtrlRead($g_prexscale[1])
+					$power = GUICtrlRead($g_power[2])
+					$factor = ($old/$new)^$power
+					GUICtrlSetData($g_accel[1], Round($factor*GUICtrlRead($g_accel[2]),4))
 				EndIf
 				If BitAND(GUICtrlRead($lockprescaleitem), $GUI_CHECKED) = $GUI_CHECKED Then
-					GUICtrlSetData($m_new_preyscale, GUICtrlRead($m_new_prexscale))
+					GUICtrlSetData($g_preyscale[1], GUICtrlRead($g_prexscale[1]))
 				EndIf
 			Case $msg = $openprofilebutton
 				$file = FileOpenDialog("Open Profile", $file_path, "Profiles (*.profile)|All (*.*)", 3, "", $GUI)
@@ -1425,7 +1441,8 @@ Func _Main()	;Draw and handle the GUI
 					$AutoTriggers = IniRead($ini_path,"ProfileSettings","Triggers","")
 					$AutoActives = IniRead($ini_path,"ProfileSettings","Active","")
 					$autoprofilearray = StringSplit($AutoProfiles,"\")
-					$autotriggerarray = StringSplit($AutoTriggers,"\")$autoactivearray = StringSplit($AutoActives,"\")
+					$autotriggerarray = StringSplit($AutoTriggers,"\")
+					$autoactivearray = StringSplit($AutoActives,"\")
 					if StringLen($AutoProfiles) = 0 Then
 						MsgBox(0,"Auto Profiles", "First, save some profiles.  Then click on Profiles -> Manage Automatic Profiles to configure this option.")
 						GUICtrlSetState($autoprofilecheckbox, $GUI_UNCHECKED)
@@ -1443,11 +1460,8 @@ Func _Main()	;Draw and handle the GUI
 				GUISetState(@SW_DISABLE, $GUI)
 				_GraphOptionsGui($GUI, $file_path)
 				GUISetState(@SW_ENABLE, $GUI)
-				WinActivate("[TITLE:Intercept Mouse Accel Filter Config]", "") ; restore focus to this GUI
+				WinActivate("[TITLE:Intercept Mouse Accel Filter Config]", "")	;Restore focus to this GUI
 				_Draw_Graph()
-				;Case $msg = $dummy
-				;MsgBox(0,"test",_GUICtrlSysLink_GetItemUrl($hyperlink, GUICtrlRead($Dummy)))
-				;ShellExecute(_GUICtrlSysLink_GetItemUrl($hyperlink, GUICtrlRead($Dummy)))
 			Case $msg = $blogoption
 				ShellExecute("http://mouseaccel.blogspot.com")
 			Case $msg = $mousesensweboption

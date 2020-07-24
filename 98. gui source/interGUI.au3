@@ -141,10 +141,7 @@ Ideas/fixes to implement:
 Global $GraphStamp = 0	;Used to make sure we aren't drawing an old request
 ;These are GUI elements— Don't touch these.
 Global $GUI, $Graph, $ProfileGUI, $ProfileLabel, $hyperlink, $Dummy
-Global $mode0 = "QuakeLive", $mode1 = "Natural", $mode2 = "Logarithmic"	;Mode names
-;New variables to store the actual settings
-Global $v_accelmode, $v_sens, $v_accel, $v_senscap, $v_offset, $v_power, $v_prexscale, $v_preyscale, $v_postxscale, $v_postyscale, $v_angle, $v_anglesnap, $v_speedcap
-;Array format: $g_option = [Label, Input, Current]. $g_ = "Gui element"
+Global $mode[6] = ["QuakeLive", "Natural", "Logarithmic", "Source", "Sigmoid", "Logic"]	;Mode names
 Global $g_accelmode[3], $g_sens[3], $g_accel[3], $g_senscap[3], $g_offset[3], $g_power[3], $g_prexscale[3], $g_preyscale[3], $g_postxscale[3], $g_postyscale[3], $g_angle[3], $g_anglesnap[3], $g_speedcap[3]
 Global $m_driverenabled, $m_new_driverenabled, $autoprofilecheckbox, $openprofilebutton, $manualprofilecheckbox
 Global $senscapscaleitem, $senscapscaleitem2, $accelscaleitem, $accelscaleitem2
@@ -193,18 +190,18 @@ EndFunc
 
 Func _ConvertAccelMode($input)	;Return accelmode as a number for settings.txt
 	Switch $input
-		Case $mode0
+		Case $mode[0]
 			Return 0
-		Case $mode1
+		Case $mode[1]
 			Return 1
-		Case $mode2
+		Case $mode[2]
 			Return 2
 		Case 0
-			Return $mode0
+			Return $mode[0]
 		Case 1
-			Return $mode1
+			Return $mode[1]
 		Case 2
-			Return $mode2
+			Return $mode[2]
 	EndSwitch
 EndFunc
 
@@ -296,7 +293,7 @@ EndFunc
 
 Func _WriteValsToConfig($silentsuccess = 0)	;Write new values to 'current' values and settings.txt.
 	;If bad values exist, fail before doing anything.
-	If Not(GUICtrlRead($g_accelmode[1]) == $mode0 Or GUICtrlRead($g_accelmode[1]) == $mode1 Or GUICtrlRead($g_accelmode[1]) == $mode2) Then
+	If Not(GUICtrlRead($g_accelmode[1]) == $mode[0] Or GUICtrlRead($g_accelmode[1]) == $mode[1] Or GUICtrlRead($g_accelmode[1]) == $mode[2]) Then
 		MsgBox(0x10, "Failure", "AccelMode must be one of the listed modes", 3, $GUI)
 		Return 1
 	EndIf
@@ -377,7 +374,7 @@ Func _WriteValsToConfig($silentsuccess = 0)	;Write new values to 'current' value
 	EndIf
 
 	;Disable power during natural accel
-	If GUICtrlRead($g_accelmode[1]) == $mode1 OR GUICtrlRead($g_accelmode[1]) == $mode2 Then
+	If GUICtrlRead($g_accelmode[1]) == $mode[1] OR GUICtrlRead($g_accelmode[1]) == $mode[2] Then
 		GUICtrlSetState($g_power[1], $GUI_DISABLE)
 	Else
 		GUICtrlSetState($g_power[1], $GUI_ENABLE)
@@ -448,55 +445,42 @@ Func _ReadValsFromConfig()	;Get existing values from the Config
 		$aVariable = StringSplit($line," = ",1)
 		Switch $aVariable[1]
 			Case "AccelMode"
-				;$v_accelmode = _ConvertAccelMode($aVariable[2])
 				GUICtrlSetData($g_accelmode[2], _ConvertAccelMode($aVariable[2]))
 				GUICtrlSetData($g_accelmode[1], _ConvertAccelMode($aVariable[2]))
 			Case "Sensitivity"
-				;$v_sens = $aVariable[2]
 				GUICtrlSetData($g_sens[2], $aVariable[2])
 				GUICtrlSetData($g_sens[1], $aVariable[2])
 			Case "Acceleration"
-				;$v_accel = $aVariable[2]
 				GUICtrlSetData($g_accel[2], $aVariable[2])
 				GUICtrlSetData($g_accel[1], $aVariable[2])
 			Case "SensitivityCap"
-				;$v_senscap = $aVariable[2]
 				GUICtrlSetData($g_senscap[2], $aVariable[2])
 				GUICtrlSetData($g_senscap[1], $aVariable[2])
 			Case "Offset"
-				;$v_offset = $aVariable[2]
 				GUICtrlSetData($g_offset[2], $aVariable[2])
 				GUICtrlSetData($g_offset[1], $aVariable[2])
 			Case "Power"
-				;$v_power = $aVariable[2]
 				GUICtrlSetData($g_power[2], $aVariable[2])
 				GUICtrlSetData($g_power[1], $aVariable[2])
 			Case "Pre-ScaleX"
-				;$v_prexscale = $aVariable[2]
 				GUICtrlSetData($g_prexscale[2], $aVariable[2])
 				GUICtrlSetData($g_prexscale[1], $aVariable[2])
 			Case "Pre-ScaleY"
-				;$v_preyscale = $aVariable[2]
 				GUICtrlSetData($g_preyscale[2], $aVariable[2])
 				GUICtrlSetData($g_preyscale[1], $aVariable[2])
 			Case "Post-ScaleX"
-				;$v_postxscale = $aVariable[2]
 				GUICtrlSetData($g_postxscale[2], $aVariable[2])
 				GUICtrlSetData($g_postxscale[1], $aVariable[2])
 			Case "Post-ScaleY"
-				;$v_postyscale = $aVariable[2]
 				GUICtrlSetData($g_postyscale[2], $aVariable[2])
 				GUICtrlSetData($g_postyscale[1], $aVariable[2])
 			Case "AngleAdjustment"
-				;$v_angle = $aVariable[2]
 				GUICtrlSetData($g_angle[2], $aVariable[2])
 				GUICtrlSetData($g_angle[1], $aVariable[2])
 			Case "AngleSnapping"
-				;$v_anglesnap = $aVariable[2]
 				GUICtrlSetData($g_anglesnap[2], $aVariable[2])
 				GUICtrlSetData($g_anglesnap[1], $aVariable[2])
 			Case "SpeedCap"
-				;$v_speedcap = $aVariable[2]
 				GUICtrlSetData($g_speedcap[2], $aVariable[2])
 				GUICtrlSetData($g_speedcap[1], $aVariable[2])
 		EndSwitch
@@ -505,7 +489,7 @@ Func _ReadValsFromConfig()	;Get existing values from the Config
 	FileClose($hFileOpen)
 
 	;Disable power during natural accel
-	If GUICtrlRead($g_accelmode[1]) == $mode1 OR GUICtrlRead($g_accelmode[1]) == $mode2 Then
+	If GUICtrlRead($g_accelmode[1]) == $mode[1] OR GUICtrlRead($g_accelmode[1]) == $mode[2] Then
 		GUICtrlSetState($g_power[1], $GUI_DISABLE)
 	Else
 		GUICtrlSetState($g_power[1], $GUI_ENABLE)
@@ -521,7 +505,7 @@ EndFunc
 Func _WriteProfile($file, $silentsuccess = 0)	;Save current settings to $file
 	If StringRight($file, 8) <> ".profile" Then $file &= ".profile"
 
-	IniWrite($file,"MouseSettings","AccelMode",GUICtrlRead($g_accelmode[2]))
+	IniWrite($file,"MouseSettings","AccelMode",_ConvertAccelMode(GUICtrlRead($g_accelmode[2])))
 	IniWrite($file,"MouseSettings","Sensitivity",GUICtrlRead($g_sens[2]))
 	IniWrite($file,"MouseSettings","Acceleration",GUICtrlRead($g_accel[2]))
 	IniWrite($file,"MouseSettings","SensitivityCap",GUICtrlRead($g_senscap[2]))
@@ -550,7 +534,7 @@ Func _ReadProfile($file, $silentsuccess = 0)	;Read $file to current settings
 		Return
 	EndIf
 
-	GUICtrlSetData($g_accelmode[1], IniRead($file,"MouseSettings","AccelMode",$mode0))
+	GUICtrlSetData($g_accelmode[1], _ConvertAccelMode(IniRead($file,"MouseSettings","AccelMode",$mode[0])))
 	GUICtrlSetData($g_sens[1], IniRead($file,"MouseSettings","Sensitivity","1"))
 	GUICtrlSetData($g_accel[1], IniRead($file,"MouseSettings","Acceleration","0"))
 	GUICtrlSetData($g_senscap[1], IniRead($file,"MouseSettings","SensitivityCap","0"))
@@ -599,7 +583,7 @@ Func _Draw_Graph()	;Refreshes graph, starts with current values (green line) the
 		$file = $file_path & $ProfilesChecked[$i]
 		if NOT(FileExists($file)) then ContinueLoop ; don't load deleted profiles
 
-		$accelmode = IniRead($file, "MouseSettings","AccelMode",$mode0)
+		$accelmode = IniRead($file, "MouseSettings","AccelMode",$mode[0])
 		$sens = IniRead($file,"MouseSettings","Sensitivity","1")
 		$accel = IniRead($file,"MouseSettings","Acceleration","0")
 		$senscap = IniRead($file,"MouseSettings","SensitivityCap","0")
@@ -701,17 +685,17 @@ Func _MouseInputToOutput($input, $accelmode, $sens, $accel, $senscap, $offset, $
 		$rate -= $offset
 		if $rate > 0 Then
 			Switch $accelmode
-			Case $mode0
+			Case $mode[0]
 				$rate *= $accel
 				$power -= 1
 				if $power < 0 Then	$power = 0
 				$accelsens += Exp($power * Log($rate))
-			Case $mode1
+			Case $mode[1]
 				$rate *= $accel
 				$rate /= Abs($a)
 				$rate *= -1
 				$accelsens += $a - ($a * exp($rate))
-			Case $mode2
+			Case $mode[2]
 				$rate *= $accel
 				$rate += 1
 				$accelsens += Log($rate)
@@ -1010,22 +994,19 @@ Func _Main()	;Draw and handle the GUI
 
 
 	;Draw the settings labels/inputs
-	Local $widthCell, $iOldOpt
+	Local $widthCell = 90, $heightCell = 5, $iOldOpt
 	$iOldOpt = Opt("GUICoordMode", 2)
 
-	$widthCell = 90
-	$heightCell = 5
 	GUISetFont (9, 800)
-	GUICtrlCreateLabel("Driver Settings", 10, 70, $widthCell) ; first cell 70 width
+	GUICtrlCreateLabel("Driver Settings", 10, 70, $widthCell)	;First cell, 70 width
 	GUICtrlCreateLabel("New", 0, -1) ; next Cell
 	GUICtrlCreateLabel("Current", 0, -1) ; next Cell
-	GUISetFont (9, 400)
 
+	GUISetFont (9, 400)
 	$g_accelmode[0] = GUICtrlCreateLabel("AccelMode", -3 * $widthCell, $heightCell) ; next line
-	$g_accelmode[1] = GUICtrlCreateCombo($mode0, 0, -1) ; same line, next cell
-	$g_accelmode[2] = GUICtrlCreateLabel($mode1, 0, -1) ; same line, next cell
-	GUICtrlSetData($g_accelmode[1], $mode1)
-	GUICtrlSetData($g_accelmode[1], $mode2)
+	$g_accelmode[1] = GUICtrlCreateCombo($mode[0], 0, -1) ; same line, next cell
+	$g_accelmode[2] = GUICtrlCreateLabel($mode[0], 0, -1) ; same line, next cell
+	GUICtrlSetData($g_accelmode[1], $mode[1]&"|"&$mode[2])
 	$g_sens[0] = GUICtrlCreateLabel("Sensitivity", -3 * $widthCell, $heightCell) ; next line
 	$g_sens[1] = GUICtrlCreateInput("1", 0, -1) ; same line, next cell
 	$g_sens[2] = GUICtrlCreateLabel("1", 0, -1) ; same line, next cell
@@ -1063,6 +1044,9 @@ Func _Main()	;Draw and handle the GUI
 	$g_angle[1] = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
 	$g_angle[2] = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
 
+	$iOldOpt = Opt("GUICoordMode", $iOldOpt)
+
+
 	;Tooltips
 	Local $hToolTip = _GUIToolTip_Create(0); default tooltip
 	;Set the tooltip to last 30 seconds.
@@ -1096,8 +1080,6 @@ Func _Main()	;Draw and handle the GUI
 	Local $h_new_angle = GUICtrlGetHandle($g_angle[1])
 	_GUIToolTip_AddTool($hToolTip, 0, "Rotation of initial mouse movement.  Intended to correct for oddly placed mouse sensors where straight left/right movement of your mouse doesn't correspond to straight left/right movement of your cursor.", $h_new_angle)
 
-
-	$iOldOpt = Opt("GUICoordMode", $iOldOpt)
 
 	$checkx = 8
 	$checky = 458

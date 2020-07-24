@@ -959,6 +959,12 @@ Func _Main()	;Draw and handle the GUI
 	$style = _WinAPI_GetWindowLong($GUI, $GWL_STYLE)
 	If BitAnd($style,BitOr($WS_SIZEBOX,$WS_MAXIMIZEBOX)) Then _WinAPI_SetWindowLong($GUI,$GWL_STYLE,BitXOR($style,$WS_SIZEBOX,$WS_MAXIMIZEBOX))
 
+
+	Local $firstTimeRunningGUI = 1
+	if FileExists($ini_path) Then $firstTimeRunningGUI = 0
+	_ReadIni()	;Get program settings from settings.ini (or go by defaults if it isn't there
+
+
 	;File Menu
 	$filemenu = GUICtrlCreateMenu("&File")
 	$wizardoption = GUICtrlCreateMenuItem("Configuration &Wizard", $filemenu)
@@ -999,50 +1005,50 @@ Func _Main()	;Draw and handle the GUI
 
 	GUISetFont (9, 800)
 	GUICtrlCreateLabel("Driver Settings", 10, 70, $widthCell)	;First cell, 70 width
-	GUICtrlCreateLabel("New", 0, -1) ; next Cell
-	GUICtrlCreateLabel("Current", 0, -1) ; next Cell
+	GUICtrlCreateLabel("New", 0, -1)	;Next cell
+	GUICtrlCreateLabel("Current", 0, -1)	;Next cell
 
 	GUISetFont (9, 400)
-	$g_accelmode[0] = GUICtrlCreateLabel("AccelMode", -3 * $widthCell, $heightCell) ; next line
-	$g_accelmode[1] = GUICtrlCreateCombo($mode[0], 0, -1) ; same line, next cell
-	$g_accelmode[2] = GUICtrlCreateLabel($mode[0], 0, -1) ; same line, next cell
+	$g_accelmode[0] = GUICtrlCreateLabel("AccelMode", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
+	$g_accelmode[1] = GUICtrlCreateCombo($mode[0], 0, -1)	;Next cell
+	$g_accelmode[2] = GUICtrlCreateLabel($mode[0], 0, -1)	;Next cell
 	GUICtrlSetData($g_accelmode[1], $mode[1]&"|"&$mode[2])
-	$g_sens[0] = GUICtrlCreateLabel("Sensitivity", -3 * $widthCell, $heightCell) ; next line
-	$g_sens[1] = GUICtrlCreateInput("1", 0, -1) ; same line, next cell
-	$g_sens[2] = GUICtrlCreateLabel("1", 0, -1) ; same line, next cell
-	$g_accel[0] = GUICtrlCreateLabel("Acceleration", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$g_accel[1] = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
-	$g_accel[2] = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
-	$g_senscap[0] = GUICtrlCreateLabel("Sensitivity Cap", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$g_senscap[1] = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
-	$g_senscap[2] = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
-	$g_speedcap[0] = GUICtrlCreateLabel("Speed Cap", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$g_speedcap[1] = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
-	$g_speedcap[2] = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
-	$g_offset[0] = GUICtrlCreateLabel("Offset", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$g_offset[1] = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
-	$g_offset[2] = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
-	$g_power[0] = GUICtrlCreateLabel("Power", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$g_power[1] = GUICtrlCreateInput("2", 0, -1) ; same line, next cell
-	$g_power[2] = GUICtrlCreateLabel("2", 0, -1) ; same line, next cell
-	$g_prexscale[0] = GUICtrlCreateLabel("Pre-Scale X", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$g_prexscale[1] = GUICtrlCreateInput("1", 0, -1) ; same line, next cell
-	$g_prexscale[2] = GUICtrlCreateLabel("1", 0, -1) ; same line, next cell
-	$g_preyscale[0] = GUICtrlCreateLabel("Pre-Scale Y", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$g_preyscale[1] = GUICtrlCreateInput("1", 0, -1) ; same line, next cell
-	$g_preyscale[2] = GUICtrlCreateLabel("1", 0, -1) ; same line, next cell
-	$g_postxscale[0] = GUICtrlCreateLabel("Post-Scale X", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$g_postxscale[1] = GUICtrlCreateInput("1", 0, -1) ; same line, next cell
-	$g_postxscale[2] = GUICtrlCreateLabel("1", 0, -1) ; same line, next cell
-	$g_postyscale[0] = GUICtrlCreateLabel("Post-Scale Y", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$g_postyscale[1] = GUICtrlCreateInput("1", 0, -1) ; same line, next cell
-	$g_postyscale[2] = GUICtrlCreateLabel("1", 0, -1) ; same line, next cell
-	$g_anglesnap[0] = GUICtrlCreateLabel("AngleSnapping", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$g_anglesnap[1] = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
-	$g_anglesnap[2] = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
-	$g_angle[0] = GUICtrlCreateLabel("Angle", -3 * $widthCell, $heightCell) ; next line, back a cell
-	$g_angle[1] = GUICtrlCreateInput("0", 0, -1) ; same line, next cell
-	$g_angle[2] = GUICtrlCreateLabel("0", 0, -1) ; same line, next cell
+	$g_sens[0] = GUICtrlCreateLabel("Sensitivity", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
+	$g_sens[1] = GUICtrlCreateInput("1", 0, -1)	;Next cell
+	$g_sens[2] = GUICtrlCreateLabel("1", 0, -1)	;Next cell
+	$g_accel[0] = GUICtrlCreateLabel("Acceleration", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
+	$g_accel[1] = GUICtrlCreateInput("0", 0, -1)	;Next cell
+	$g_accel[2] = GUICtrlCreateLabel("0", 0, -1)	;Next cell
+	$g_senscap[0] = GUICtrlCreateLabel("Sensitivity Cap", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
+	$g_senscap[1] = GUICtrlCreateInput("0", 0, -1)	;Next cell
+	$g_senscap[2] = GUICtrlCreateLabel("0", 0, -1)	;Next cell
+	$g_speedcap[0] = GUICtrlCreateLabel("Speed Cap", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
+	$g_speedcap[1] = GUICtrlCreateInput("0", 0, -1)	;Next cell
+	$g_speedcap[2] = GUICtrlCreateLabel("0", 0, -1)	;Next cell
+	$g_offset[0] = GUICtrlCreateLabel("Offset", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
+	$g_offset[1] = GUICtrlCreateInput("0", 0, -1)	;Next cell
+	$g_offset[2] = GUICtrlCreateLabel("0", 0, -1)	;Next cell
+	$g_power[0] = GUICtrlCreateLabel("Power", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
+	$g_power[1] = GUICtrlCreateInput("2", 0, -1)	;Next cell
+	$g_power[2] = GUICtrlCreateLabel("2", 0, -1)	;Next cell
+	$g_prexscale[0] = GUICtrlCreateLabel("Pre-Scale X", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
+	$g_prexscale[1] = GUICtrlCreateInput("1", 0, -1)	;Next cell
+	$g_prexscale[2] = GUICtrlCreateLabel("1", 0, -1)	;Next cell
+	$g_preyscale[0] = GUICtrlCreateLabel("Pre-Scale Y", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
+	$g_preyscale[1] = GUICtrlCreateInput("1", 0, -1)	;Next cell
+	$g_preyscale[2] = GUICtrlCreateLabel("1", 0, -1)	;Next cell
+	$g_postxscale[0] = GUICtrlCreateLabel("Post-Scale X", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
+	$g_postxscale[1] = GUICtrlCreateInput("1", 0, -1)	;Next cell
+	$g_postxscale[2] = GUICtrlCreateLabel("1", 0, -1)	;Next cell
+	$g_postyscale[0] = GUICtrlCreateLabel("Post-Scale Y", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
+	$g_postyscale[1] = GUICtrlCreateInput("1", 0, -1)	;Next cell
+	$g_postyscale[2] = GUICtrlCreateLabel("1", 0, -1)	;Next cell
+	$g_anglesnap[0] = GUICtrlCreateLabel("AngleSnapping", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
+	$g_anglesnap[1] = GUICtrlCreateInput("0", 0, -1)	;Next cell
+	$g_anglesnap[2] = GUICtrlCreateLabel("0", 0, -1)	;Next cell
+	$g_angle[0] = GUICtrlCreateLabel("Angle", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
+	$g_angle[1] = GUICtrlCreateInput("0", 0, -1)	;Next cell
+	$g_angle[2] = GUICtrlCreateLabel("0", 0, -1)	;Next cell
 
 	$iOldOpt = Opt("GUICoordMode", $iOldOpt)
 
@@ -1105,12 +1111,9 @@ Func _Main()	;Draw and handle the GUI
 	$manualprofilecheckbox = GUICtrlCreateCheckbox("Global Hotkey Switching", 135, 40, 150, 12)
 	GUISetFont (9, 400)
 
+
 	_ReadValsFromConfig()	;Get driver values from Config
 
-	Local $firstTimeRunningGUI = 1
-	if FileExists($ini_path) Then $firstTimeRunningGUI = 0
-
-	_ReadIni()	;Get program settings from settings.ini (or go by defaults if it isn't there
 
 	Local $graphxpos = 330, $graphypos = 65	;Variables to keep the scale buttons and labels in the right places
 	Local $graphwidth = 370, $graphheight = 370

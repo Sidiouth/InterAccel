@@ -208,9 +208,9 @@ Func _ConvertAccelMode($input)	;Return accelmode as a number for settings.txt
 EndFunc
 
 Func _ClearOptions()	;Delete all Options so they can be redrawn
-;~ 	GUICtrlDelete($g_accelmode[0])
-;~ 	GUICtrlDelete($g_accelmode[1])
-;~ 	GUICtrlDelete($g_accelmode[2])
+	GUICtrlDelete($g_accelmode[0])
+	GUICtrlDelete($g_accelmode[1])
+	GUICtrlDelete($g_accelmode[2])
 	GUICtrlDelete($g_sens[0])
 	GUICtrlDelete($g_sens[1])
 	GUICtrlDelete($g_sens[2])
@@ -397,7 +397,7 @@ Func _WriteValsToConfig($silentsuccess = 0)	;Write new values to 'current' value
 		Return 1
 	EndIf
 
-	;Write new values into the global settings.
+	;Write new values into current values for GUI.
 	$v_accelmode = GUICtrlRead($g_accelmode[1])
 	$v_sens = _GetNumberFromString(GUICtrlRead($g_sens[1]))
 	$v_accel = _GetNumberFromString(GUICtrlRead($g_accel[1]))
@@ -435,19 +435,19 @@ Func _WriteValsToConfig($silentsuccess = 0)	;Write new values to 'current' value
 	EndIf
 
 	;Write data to the file using the handle returned by FileOpen.
-	FileWriteLine($hFileOpen, "AccelMode = " & _ConvertAccelMode($v_accelmode))
-	FileWriteLine($hFileOpen, "Sensitivity = " & GUICtrlRead($v_sens))
-	FileWriteLine($hFileOpen, "Acceleration = " & GUICtrlRead($v_accel))
-    FileWriteLine($hFileOpen, "SensitivityCap = " & GUICtrlRead($v_senscap))
-    FileWriteLine($hFileOpen, "Offset = " & GUICtrlRead($v_offset))
-    FileWriteLine($hFileOpen, "Power = " & GUICtrlRead($v_power))
-    FileWriteLine($hFileOpen, "Pre-ScaleX = " & GUICtrlRead($v_prexscale))
-    FileWriteLine($hFileOpen, "Pre-ScaleY = " & GUICtrlRead($v_preyscale))
-    FileWriteLine($hFileOpen, "Post-ScaleX = " & GUICtrlRead($v_postxscale))
-    FileWriteLine($hFileOpen, "Post-ScaleY = " & GUICtrlRead($v_postyscale))
-    FileWriteLine($hFileOpen, "AngleAdjustment = " & GUICtrlRead($v_angle))
-    FileWriteLine($hFileOpen, "AngleSnapping = " & GUICtrlRead($v_anglesnap))
-    FileWriteLine($hFileOpen, "SpeedCap = " & GUICtrlRead($v_speedcap))
+	FileWriteLine($hFileOpen, "AccelMode = " & _ConvertAccelMode(GUICtrlRead($g_accelmode[1])))
+	FileWriteLine($hFileOpen, "Sensitivity = " & GUICtrlRead($g_sens[1] ))
+	FileWriteLine($hFileOpen, "Acceleration = " & GUICtrlRead($g_accel[1]))
+    FileWriteLine($hFileOpen, "SensitivityCap = " & GUICtrlRead($g_senscap[1]))
+    FileWriteLine($hFileOpen, "Offset = " & GUICtrlRead($g_offset[1]))
+    FileWriteLine($hFileOpen, "Power = " & GUICtrlRead($g_power[1]))
+    FileWriteLine($hFileOpen, "Pre-ScaleX = " & GUICtrlRead($g_prexscale[1]))
+    FileWriteLine($hFileOpen, "Pre-ScaleY = " & GUICtrlRead($g_preyscale[1]))
+    FileWriteLine($hFileOpen, "Post-ScaleX = " & GUICtrlRead($g_postxscale[1]))
+    FileWriteLine($hFileOpen, "Post-ScaleY = " & GUICtrlRead($g_postyscale[1]))
+    FileWriteLine($hFileOpen, "AngleAdjustment = " & GUICtrlRead($g_angle[1]))
+    FileWriteLine($hFileOpen, "AngleSnapping = " & GUICtrlRead($g_anglesnap[1]))
+    FileWriteLine($hFileOpen, "SpeedCap = " & GUICtrlRead($g_speedcap[1]))
     FileWriteLine($hFileOpen, "FancyOutput = 0")
 
 	;Close the handle returned by FileOpen.
@@ -1023,9 +1023,7 @@ Func _Main()	;Draw and handle the GUI
 	$blogoption = GUICtrlCreateMenuItem("Mouse Accel &Blog (for this driver/program)", $helpmenu)
 	$mousesensweboption = GUICtrlCreateMenuItem("Mouse-&Sensitivity.com (same sens, different game)", $helpmenu)
 
-
 	_ReadIni()	;Get program settings from settings.ini (or go by defaults if it isn't there
-
 
 	;Draw the settings labels/inputs
 	Local $widthCell = 90, $heightCell = 5, $iOldOpt
@@ -1035,11 +1033,11 @@ Func _Main()	;Draw and handle the GUI
 	GUICtrlCreateLabel("Driver Settings", 10, 70, $widthCell) ; first cell 70 width
 	GUICtrlCreateLabel("New", 0, -1) ; next Cell
 	GUICtrlCreateLabel("Current", 0, -1) ; next Cell
-
 	GUISetFont (9, 400)
+
 	$g_accelmode[0] = GUICtrlCreateLabel("AccelMode", -3 * $widthCell, $heightCell) ; next line
 	$g_accelmode[1] = GUICtrlCreateCombo($mode[0], 0, -1) ; same line, next cell
-	$g_accelmode[2] = GUICtrlCreateLabel($mode[0], 0, -1) ; same line, next cell
+	$g_accelmode[2] = GUICtrlCreateLabel($mode[1], 0, -1) ; same line, next cell
 	GUICtrlSetData($g_accelmode[1], $mode[1])
 	GUICtrlSetData($g_accelmode[1], $mode[2])
 	$g_sens[0] = GUICtrlCreateLabel("Sensitivity", -3 * $widthCell, $heightCell) ; next line

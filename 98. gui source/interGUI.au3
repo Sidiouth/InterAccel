@@ -392,7 +392,7 @@ Func _WriteValsToConfig($silentsuccess = 0)	;Write new values to 'current' value
 
 	;Write data to the file using the handle returned by FileOpen.
 	FileWriteLine($hFileOpen, "AccelMode = " & _ConvertAccelMode(GUICtrlRead($g_accelmode[1])))
-	FileWriteLine($hFileOpen, "Sensitivity = " & GUICtrlRead($g_sens[1] ))
+	FileWriteLine($hFileOpen, "Sensitivity = " & GUICtrlRead($g_sens[1]))
 	FileWriteLine($hFileOpen, "Acceleration = " & GUICtrlRead($g_accel[1]))
     FileWriteLine($hFileOpen, "SensitivityCap = " & GUICtrlRead($g_senscap[1]))
     FileWriteLine($hFileOpen, "Offset = " & GUICtrlRead($g_offset[1]))
@@ -1004,7 +1004,7 @@ Func _Main()	;Draw and handle the GUI
 	$iOldOpt = Opt("GUICoordMode", 2)
 
 	GUISetFont (9, 800)
-	GUICtrlCreateLabel("Driver Settings", 10, 70, $widthCell)	;First cell, 70 width
+	GUICtrlCreateLabel("Driver Settings", 10, 70, $widthCell)	;First cell, 90 width
 	GUICtrlCreateLabel("New", 0, -1)	;Next cell
 	GUICtrlCreateLabel("Current", 0, -1)	;Next cell
 

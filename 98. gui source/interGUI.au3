@@ -23,8 +23,6 @@ specific process (.exe) running.
 
 Note this was my first attempt at using AutoIT.  I apologize for crap code and abuse of globals.
 
-TODO:
--Simple GUI mode that hides Sensitivity/Pre-scales.
 
 Changelog:
 4.00 (07/02/20)
@@ -153,6 +151,11 @@ Global $CurrentProfile = ""
 Global $ini_path = $file_path & "settings.ini"
 Global $graphdensity, $graph_x, $graph_y, $frametime_ms, $mouse_dpi, $graph_scale
 
+;Coodinate controls for the settings elements
+Global $width = 90, $height = 28, $left = 8, $top = 68
+Global $row[14] = [$top, $top + $height, $top + ($height*2), $top + ($height*3), $top + ($height*4), $top + ($height*5), $top + ($height*6), $top + ($height*7), $top + ($height*8), $top + ($height*9), $top + ($height*10), $top + ($height*11), $top + ($height*12), $top + ($height*13)]	;Starts with Sens, not Accelmode or the headers
+Global $col[3] = [$left, $left + $width, $left + ($width*2) + 2]
+
 Global $accelExeName = "interaccel.exe"
 
 If _Singleton("Intercept Mouse Accel Filter Config", 1) = 0 Then
@@ -202,6 +205,117 @@ Func _ConvertAccelMode($input)	;Return accelmode as a number for settings.txt
 			Return $mode[1]
 		Case 2
 			Return $mode[2]
+	EndSwitch
+EndFunc
+
+Func _UpdateSettingsList($flag)
+	Switch $flag
+		Case 0	;Display settings in default order and re-enable disabled settings
+			GUICtrlSetPos($g_sens[0],		Default,	$row[2])
+			GUICtrlSetPos($g_sens[1],		Default,	$row[2])
+			GUICtrlSetPos($g_sens[2],		Default,	$row[2])
+			GUICtrlSetPos($g_accel[0],		Default,	$row[3])
+			GUICtrlSetPos($g_accel[1],		Default,	$row[3])
+			GUICtrlSetPos($g_accel[2],		Default,	$row[3])
+			GUICtrlSetPos($g_power[0],		Default,	$row[4])
+			GUICtrlSetPos($g_power[1],		Default,	$row[4])
+			GUICtrlSetPos($g_power[2],		Default,	$row[4])
+			GUICtrlSetPos($g_senscap[0],	Default,	$row[5])
+			GUICtrlSetPos($g_senscap[1],	Default,	$row[5])
+			GUICtrlSetPos($g_senscap[2],	Default,	$row[5])
+			GUICtrlSetPos($g_speedcap[0],	Default,	$row[6])
+			GUICtrlSetPos($g_speedcap[1],	Default,	$row[6])
+			GUICtrlSetPos($g_speedcap[2],	Default,	$row[6])
+			GUICtrlSetPos($g_offset[0],		Default,	$row[7])
+			GUICtrlSetPos($g_offset[1], 	Default,	$row[7])
+			GUICtrlSetPos($g_offset[2],		Default,	$row[7])
+			GUICtrlSetPos($g_prexscale[0],	Default,	$row[8])
+			GUICtrlSetPos($g_prexscale[1],	Default,	$row[8])
+			GUICtrlSetPos($g_prexscale[2],	Default,	$row[8])
+			GUICtrlSetPos($g_preyscale[0],	Default,	$row[9])
+			GUICtrlSetPos($g_preyscale[1],	Default,	$row[9])
+			GUICtrlSetPos($g_preyscale[2],	Default,	$row[9])
+			GUICtrlSetPos($g_postxscale[0],	Default,	$row[10])
+			GUICtrlSetPos($g_postxscale[1], Default,	$row[10])
+			GUICtrlSetPos($g_postxscale[2], Default,	$row[10])
+			GUICtrlSetPos($g_postyscale[0], Default,	$row[11])
+			GUICtrlSetPos($g_postyscale[1], Default,	$row[11])
+			GUICtrlSetPos($g_postyscale[2], Default,	$row[11])
+
+			GUICtrlSetState($g_sens[0],			$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_sens[1],			$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_sens[2],			$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_speedcap[0],		$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_speedcap[1],		$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_speedcap[2],		$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_prexscale[0],	$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_prexscale[1],	$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_prexscale[2],	$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_preyscale[0],	$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_preyscale[1],	$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_preyscale[2],	$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_anglesnap[0],	$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_anglesnap[1],	$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_anglesnap[2],	$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_angle[0],		$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_angle[1],		$GUI_SHOW + $GUI_ENABLE)
+			GUICtrlSetState($g_angle[2],		$GUI_SHOW + $GUI_ENABLE)
+		Case 1	;Reorder, hide, and disable less used settings
+			GUICtrlSetState($g_sens[0],			$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_sens[1],			$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_sens[2],			$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_speedcap[0],		$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_speedcap[1],		$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_speedcap[2],		$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_prexscale[0],	$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_prexscale[1],	$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_prexscale[2],	$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_preyscale[0],	$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_preyscale[1],	$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_preyscale[2],	$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_anglesnap[0],	$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_anglesnap[1],	$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_anglesnap[2],	$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_angle[0],		$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_angle[1],		$GUI_HIDE + $GUI_DISABLE)
+			GUICtrlSetState($g_angle[2],		$GUI_HIDE + $GUI_DISABLE)
+
+			GUICtrlSetPos($g_accel[0],		Default,	$row[2])
+			GUICtrlSetPos($g_accel[1],		Default,	$row[2])
+			GUICtrlSetPos($g_accel[2],		Default,	$row[2])
+			GUICtrlSetPos($g_power[0],		Default,	$row[3])
+			GUICtrlSetPos($g_power[1],		Default,	$row[3])
+			GUICtrlSetPos($g_power[2],		Default,	$row[3])
+			GUICtrlSetPos($g_senscap[0],	Default,	$row[4])
+			GUICtrlSetPos($g_senscap[1],	Default,	$row[4])
+			GUICtrlSetPos($g_senscap[2],	Default,	$row[4])
+			GUICtrlSetPos($g_offset[0],		Default,	$row[5])
+			GUICtrlSetPos($g_offset[1], 	Default,	$row[5])
+			GUICtrlSetPos($g_offset[2],		Default,	$row[5])
+			GUICtrlSetPos($g_postxscale[0],	Default,	$row[6])
+			GUICtrlSetPos($g_postxscale[1], Default,	$row[6])
+			GUICtrlSetPos($g_postxscale[2], Default,	$row[6])
+			GUICtrlSetPos($g_postyscale[0], Default,	$row[7])
+			GUICtrlSetPos($g_postyscale[1], Default,	$row[7])
+			GUICtrlSetPos($g_postyscale[2], Default,	$row[7])
+			GUICtrlSetPos($g_sens[0],		Default,	$row[8])
+			GUICtrlSetPos($g_sens[1],		Default,	$row[8])
+			GUICtrlSetPos($g_sens[2],		Default,	$row[8])
+			GUICtrlSetPos($g_speedcap[0],	Default,	$row[9])
+			GUICtrlSetPos($g_speedcap[1],	Default,	$row[9])
+			GUICtrlSetPos($g_speedcap[2],	Default,	$row[9])
+			GUICtrlSetPos($g_prexscale[0],	Default,	$row[10])
+			GUICtrlSetPos($g_prexscale[1],	Default,	$row[10])
+			GUICtrlSetPos($g_prexscale[2],	Default,	$row[10])
+			GUICtrlSetPos($g_preyscale[0],	Default,	$row[11])
+			GUICtrlSetPos($g_preyscale[1],	Default,	$row[11])
+			GUICtrlSetPos($g_preyscale[2],	Default,	$row[11])
+		Case 2	;Disable 'Power' while in Natural mode
+			If GUICtrlRead($g_accelmode[1]) == $mode[1] OR GUICtrlRead($g_accelmode[1]) == $mode[2] Then
+				GUICtrlSetState($g_power[1], $GUI_DISABLE)
+			Else
+				GUICtrlSetState($g_power[1], $GUI_ENABLE)
+			EndIf
 	EndSwitch
 EndFunc
 
@@ -374,11 +488,7 @@ Func _WriteValsToConfig($silentsuccess = 0)	;Write new values to 'current' value
 	EndIf
 
 	;Disable power during natural accel
-	If GUICtrlRead($g_accelmode[1]) == $mode[1] OR GUICtrlRead($g_accelmode[1]) == $mode[2] Then
-		GUICtrlSetState($g_power[1], $GUI_DISABLE)
-	Else
-		GUICtrlSetState($g_power[1], $GUI_ENABLE)
-	EndIf
+	_UpdateSettingsList(2)
 
 	;Write to Config
 	FileChangeDir(@ScriptDir)
@@ -489,11 +599,7 @@ Func _ReadValsFromConfig()	;Get existing values from the Config
 	FileClose($hFileOpen)
 
 	;Disable power during natural accel
-	If GUICtrlRead($g_accelmode[1]) == $mode[1] OR GUICtrlRead($g_accelmode[1]) == $mode[2] Then
-		GUICtrlSetState($g_power[1], $GUI_DISABLE)
-	Else
-		GUICtrlSetState($g_power[1], $GUI_ENABLE)
-	EndIf
+	_UpdateSettingsList(2)
 
 	_KillAllAccelProcesses()
 	Run($accelExeName, "", @SW_HIDE)
@@ -960,11 +1066,6 @@ Func _Main()	;Draw and handle the GUI
 	If BitAnd($style,BitOr($WS_SIZEBOX,$WS_MAXIMIZEBOX)) Then _WinAPI_SetWindowLong($GUI,$GWL_STYLE,BitXOR($style,$WS_SIZEBOX,$WS_MAXIMIZEBOX))
 
 
-	Local $firstTimeRunningGUI = 1
-	if FileExists($ini_path) Then $firstTimeRunningGUI = 0
-	_ReadIni()	;Get program settings from settings.ini (or go by defaults if it isn't there
-
-
 	;File Menu
 	$filemenu = GUICtrlCreateMenu("&File")
 	$wizardoption = GUICtrlCreateMenuItem("Configuration &Wizard", $filemenu)
@@ -998,60 +1099,64 @@ Func _Main()	;Draw and handle the GUI
 	$blogoption = GUICtrlCreateMenuItem("Mouse Accel &Blog (for this driver/program)", $helpmenu)
 	$mousesensweboption = GUICtrlCreateMenuItem("Mouse-&Sensitivity.com (same sens, different game)", $helpmenu)
 
+	Local $firstTimeRunningGUI = 1
+	if FileExists($ini_path) Then $firstTimeRunningGUI = 0
+	_ReadIni()	;Get program settings from settings.ini (or go by defaults if it isn't there
+
 
 	;Draw the settings labels/inputs
-	Local $widthCell = 90, $heightCell = 5, $iOldOpt
-	$iOldOpt = Opt("GUICoordMode", 2)
-
+	;Headers
 	GUISetFont (9, 800)
-	GUICtrlCreateLabel("Driver Settings", 10, 70, $widthCell)	;First cell, 90 width
-	GUICtrlCreateLabel("New", 0, -1)	;Next cell
-	GUICtrlCreateLabel("Current", 0, -1)	;Next cell
+	GUICtrlCreateLabel("Driver Settings", $col[0], $row[0],	$width)
+	GUICtrlCreateLabel("New", $col[1], $row[0],	$width)
+	GUICtrlCreateLabel("Current", $col[2], $row[0],	$width)
 
+	;Accelmode
 	GUISetFont (9, 400)
-	$g_accelmode[0] = GUICtrlCreateLabel("AccelMode", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
-	$g_accelmode[1] = GUICtrlCreateCombo($mode[0], 0, -1)	;Next cell
-	$g_accelmode[2] = GUICtrlCreateLabel($mode[0], 0, -1)	;Next cell
+	$g_accelmode[0]		= GUICtrlCreateLabel("AccelMode",		$col[0],	$row[1],	$width)
+	$g_accelmode[1]		= GUICtrlCreateCombo($mode[0],			$col[1],	$row[1],	$width)
+	$g_accelmode[2]		= GUICtrlCreateLabel($mode[0],			$col[2],	$row[1],	$width)
 	GUICtrlSetData($g_accelmode[1], $mode[1]&"|"&$mode[2])
-	$g_sens[0] = GUICtrlCreateLabel("Sensitivity", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
-	$g_sens[1] = GUICtrlCreateInput("1", 0, -1)	;Next cell
-	$g_sens[2] = GUICtrlCreateLabel("1", 0, -1)	;Next cell
-	$g_accel[0] = GUICtrlCreateLabel("Acceleration", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
-	$g_accel[1] = GUICtrlCreateInput("0", 0, -1)	;Next cell
-	$g_accel[2] = GUICtrlCreateLabel("0", 0, -1)	;Next cell
-	$g_senscap[0] = GUICtrlCreateLabel("Sensitivity Cap", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
-	$g_senscap[1] = GUICtrlCreateInput("0", 0, -1)	;Next cell
-	$g_senscap[2] = GUICtrlCreateLabel("0", 0, -1)	;Next cell
-	$g_speedcap[0] = GUICtrlCreateLabel("Speed Cap", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
-	$g_speedcap[1] = GUICtrlCreateInput("0", 0, -1)	;Next cell
-	$g_speedcap[2] = GUICtrlCreateLabel("0", 0, -1)	;Next cell
-	$g_offset[0] = GUICtrlCreateLabel("Offset", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
-	$g_offset[1] = GUICtrlCreateInput("0", 0, -1)	;Next cell
-	$g_offset[2] = GUICtrlCreateLabel("0", 0, -1)	;Next cell
-	$g_power[0] = GUICtrlCreateLabel("Power", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
-	$g_power[1] = GUICtrlCreateInput("2", 0, -1)	;Next cell
-	$g_power[2] = GUICtrlCreateLabel("2", 0, -1)	;Next cell
-	$g_prexscale[0] = GUICtrlCreateLabel("Pre-Scale X", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
-	$g_prexscale[1] = GUICtrlCreateInput("1", 0, -1)	;Next cell
-	$g_prexscale[2] = GUICtrlCreateLabel("1", 0, -1)	;Next cell
-	$g_preyscale[0] = GUICtrlCreateLabel("Pre-Scale Y", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
-	$g_preyscale[1] = GUICtrlCreateInput("1", 0, -1)	;Next cell
-	$g_preyscale[2] = GUICtrlCreateLabel("1", 0, -1)	;Next cell
-	$g_postxscale[0] = GUICtrlCreateLabel("Post-Scale X", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
-	$g_postxscale[1] = GUICtrlCreateInput("1", 0, -1)	;Next cell
-	$g_postxscale[2] = GUICtrlCreateLabel("1", 0, -1)	;Next cell
-	$g_postyscale[0] = GUICtrlCreateLabel("Post-Scale Y", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
-	$g_postyscale[1] = GUICtrlCreateInput("1", 0, -1)	;Next cell
-	$g_postyscale[2] = GUICtrlCreateLabel("1", 0, -1)	;Next cell
-	$g_anglesnap[0] = GUICtrlCreateLabel("AngleSnapping", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
-	$g_anglesnap[1] = GUICtrlCreateInput("0", 0, -1)	;Next cell
-	$g_anglesnap[2] = GUICtrlCreateLabel("0", 0, -1)	;Next cell
-	$g_angle[0] = GUICtrlCreateLabel("Angle", -3 * $widthCell, $heightCell)	;Next line, back 3 cells
-	$g_angle[1] = GUICtrlCreateInput("0", 0, -1)	;Next cell
-	$g_angle[2] = GUICtrlCreateLabel("0", 0, -1)	;Next cell
 
-	$iOldOpt = Opt("GUICoordMode", $iOldOpt)
+	;Settings
+	$g_sens[0]			= GUICtrlCreateLabel("Sensitivity",		$col[0],	$row[2],	$width)
+	$g_sens[1]			= GUICtrlCreateInput("1",				$col[1],	$row[2],	$width)
+	$g_sens[2]			= GUICtrlCreateLabel("1",				$col[2],	$row[2],	$width)
+	$g_accel[0]			= GUICtrlCreateLabel("Acceleration",	$col[0],	$row[3],	$width)
+	$g_accel[1]			= GUICtrlCreateInput("0",				$col[1],	$row[3],	$width)
+	$g_accel[2]			= GUICtrlCreateLabel("0",				$col[2],	$row[3],	$width)
+	$g_power[0]			= GUICtrlCreateLabel("Power",			$col[0],	$row[4],	$width)
+	$g_power[1]			= GUICtrlCreateInput("2",				$col[1],	$row[4],	$width)
+	$g_power[2]			= GUICtrlCreateLabel("2",				$col[2],	$row[4],	$width)
+	$g_senscap[0]		= GUICtrlCreateLabel("Sensitivity Cap",	$col[0],	$row[5],	$width)
+	$g_senscap[1]		= GUICtrlCreateInput("0",				$col[1],	$row[5],	$width)
+	$g_senscap[2]		= GUICtrlCreateLabel("0",				$col[2],	$row[5],	$width)
+	$g_speedcap[0]		= GUICtrlCreateLabel("Speed Cap",		$col[0],	$row[6],	$width)
+	$g_speedcap[1]		= GUICtrlCreateInput("0",				$col[1],	$row[6],	$width)
+	$g_speedcap[2]		= GUICtrlCreateLabel("0",				$col[2],	$row[6],	$width)
+	$g_offset[0]		= GUICtrlCreateLabel("Offset",			$col[0],	$row[7],	$width)
+	$g_offset[1]		= GUICtrlCreateInput("0",				$col[1],	$row[7],	$width)
+	$g_offset[2]		= GUICtrlCreateLabel("0",				$col[2],	$row[7],	$width)
+	$g_prexscale[0]		= GUICtrlCreateLabel("Pre-Scale X",		$col[0],	$row[8],	$width)
+	$g_prexscale[1]		= GUICtrlCreateInput("1",				$col[1],	$row[8],	$width)
+	$g_prexscale[2]		= GUICtrlCreateLabel("1",				$col[2],	$row[8],	$width)
+	$g_preyscale[0]		= GUICtrlCreateLabel("Pre-Scale Y",		$col[0],	$row[9],	$width)
+	$g_preyscale[1]		= GUICtrlCreateInput("1",				$col[1],	$row[9],	$width)
+	$g_preyscale[2]		= GUICtrlCreateLabel("1",				$col[2],	$row[9],	$width)
+	$g_postxscale[0]	= GUICtrlCreateLabel("Post-Scale X",	$col[0],	$row[10],	$width)
+	$g_postxscale[1]	= GUICtrlCreateInput("1",				$col[1],	$row[10],	$width)
+	$g_postxscale[2]	= GUICtrlCreateLabel("1",				$col[2],	$row[10],	$width)
+	$g_postyscale[0] 	= GUICtrlCreateLabel("Post-Scale Y",	$col[0],	$row[11],	$width)
+	$g_postyscale[1] 	= GUICtrlCreateInput("1",				$col[1],	$row[11],	$width)
+	$g_postyscale[2] 	= GUICtrlCreateLabel("1",				$col[2],	$row[11],	$width)
+	$g_anglesnap[0] 	= GUICtrlCreateLabel("AngleSnapping",	$col[0],	$row[12],	$width)
+	$g_anglesnap[1] 	= GUICtrlCreateInput("0",				$col[1],	$row[12],	$width)
+	$g_anglesnap[2] 	= GUICtrlCreateLabel("0",				$col[2],	$row[12],	$width)
+	$g_angle[0] 		= GUICtrlCreateLabel("Angle",			$col[0],	$row[13],	$width)
+	$g_angle[1] 		= GUICtrlCreateInput("0",				$col[1],	$row[13],	$width)
+	$g_angle[2] 		= GUICtrlCreateLabel("0",				$col[2],	$row[13],	$width)
 
+	If BitAND(GUICtrlRead($advancedsettingsitem), $GUI_CHECKED) = $GUI_CHECKED Then _UpdateSettingsList(1)
 
 	;Tooltips
 	Local $hToolTip = _GUIToolTip_Create(0); default tooltip
@@ -1286,8 +1391,10 @@ Func _Main()	;Draw and handle the GUI
 			Case $msg = $advancedsettingsitem
 				If BitAND(GUICtrlRead($advancedsettingsitem), $GUI_CHECKED) = $GUI_CHECKED Then
 					GUICtrlSetState($advancedsettingsitem, $GUI_UNCHECKED)
+					_UpdateSettingsList(0)
 				Else
 					GUICtrlSetState($advancedsettingsitem, $GUI_CHECKED)
+					_UpdateSettingsList(1)
 				EndIf
 			Case $msg = $senscapscaleitem
 				If BitAND(GUICtrlRead($senscapscaleitem), $GUI_CHECKED) = $GUI_CHECKED Then

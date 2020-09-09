@@ -1156,7 +1156,7 @@ Func _Main()	;Draw and handle the GUI
 	$g_angle[1] 		= GUICtrlCreateInput("0",				$col[1],	$row[13],	$width)
 	$g_angle[2] 		= GUICtrlCreateLabel("0",				$col[2],	$row[13],	$width)
 
-	If BitAND(GUICtrlRead($advancedsettingsitem), $GUI_CHECKED) = $GUI_CHECKED Then _UpdateSettingsList(1)
+	If BitAND(GUICtrlRead($advancedsettingsitem), $GUI_UNCHECKED) = $GUI_UNCHECKED Then _UpdateSettingsList(1)
 
 	;Tooltips
 	Local $hToolTip = _GUIToolTip_Create(0); default tooltip
@@ -1391,10 +1391,10 @@ Func _Main()	;Draw and handle the GUI
 			Case $msg = $advancedsettingsitem
 				If BitAND(GUICtrlRead($advancedsettingsitem), $GUI_CHECKED) = $GUI_CHECKED Then
 					GUICtrlSetState($advancedsettingsitem, $GUI_UNCHECKED)
-					_UpdateSettingsList(0)
+					_UpdateSettingsList(1)
 				Else
 					GUICtrlSetState($advancedsettingsitem, $GUI_CHECKED)
-					_UpdateSettingsList(1)
+					_UpdateSettingsList(0)
 				EndIf
 			Case $msg = $senscapscaleitem
 				If BitAND(GUICtrlRead($senscapscaleitem), $GUI_CHECKED) = $GUI_CHECKED Then
